@@ -1,0 +1,37 @@
+#
+# Module menu placed in side menu of drupal
+# @Route sedm.menu.evaluation : route for evaluation page side menu
+#
+# @Route sedm.menu.curriculum.default.tab : route for curriculum page side menu at
+# the same time it is the default tab for the curriculum page
+#
+# @Route sedm.menu.curriculum.subjects.tab : route for subjects tab of curriculum page 
+#
+sedm.menu.evaluation:
+  path: '/sedm/menu/evaluation'
+  defaults:
+    _form: '\Drupal\sedm\Form\EvaluationMenu' 
+    _title: 'Evaluation'
+  requirements:
+    _permission: 'access content'
+
+sedm.menu.curriculum.default.tab: 
+  path: '/sedm/menu/curriculum/tab/default'
+  defaults:
+    _form: '\Drupal\sedm\Form\CurriculumMenuDefaultTab' 
+    _title: 'Curriculum'
+  requirements:
+    _permission: 'access content'
+
+sedm.menu.curriculum.subjects.tab:
+  path: '/sedm/menu/curriculum/tab/subjects'
+  defaults:
+    _form: '\Drupal\sedm\Form\CurriculumMenuSubjectsTab' 
+    _title: 'Subjects'
+  requirements:
+    _permission: 'access content'
+
+#################### THE END OF THE ROUTES ##############################
+
+
+

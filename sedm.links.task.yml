@@ -1,0 +1,18 @@
+# 
+# @link_task sedm.curriculum.tab.curriculum : tab for curriculum
+#
+# @link_task sedm.curriculum.tab.subjects : tab for subjects
+# 
+sedm.curriculum.tab.curriculum:
+  route_name: sedm.menu.curriculum.default.tab
+  title: Curriculum
+  base_route: sedm.menu.curriculum.default.tab
+
+sedm.curriculum.tab.subjects:
+  route_name: sedm.menu.curriculum.subjects.tab
+  title: Subjects
+  base_route: sedm.menu.curriculum.default.tab
+  weight: 2
+
+################ THE END OF LINK TASKS ################################
+

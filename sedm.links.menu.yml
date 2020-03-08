@@ -1,0 +1,21 @@
+#
+# @links_menu sedm.evaluation_menu : evaluation side menu
+#
+# @links_menu sedm.curriculum_menu : curriculum side menu
+#
+
+sedm.evaluation_menu:
+  title: 'Subject Evaluation - Evaluation'
+  description: 'Subject Evaluation - Evaluation Menu'
+  parent:  system.admin
+  route_name: sedm.menu.evaluation
+  weight: -100
+
+sedm.curriculum_menu:
+  title: 'Subject Evaluation - Curriculum'
+  description: 'Subject Evaluation - Curriculum Menu'
+  parent:  sedm.evaluation_menu
+  route_name: sedm.menu.curriculum.default.tab
+  weight: -101
+
+################ THE END OF LINK MENUS ################################

@@ -1,0 +1,6 @@
+name: Subject Evaluation Drupal Module
+description: A module for evaluating student's subjects
+package: CSUCC Modules
+type: module
+version: 1.0
+core: 8.x
