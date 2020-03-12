@@ -1,12 +1,12 @@
 evaluation.forms.styles:
   css:
     theme:
-      css/evaluation-forms.css: {}
+      css/evaluation/evaluation-forms.css: {}
 
 
 curriculum.forms.styles:
   css:
     theme:
-      css/curriculum-forms.css: {}
+      css/curriculum/curriculum-forms.css: {}
 
     

@@ -21,6 +21,11 @@ class ActiveSubjects {
             '#suffix' => '</div>',
           ];
 
+        $form['form-container']['form-title'] = [
+            '#type' => 'item',
+            '#markup' => $this->t('<h2>Active Subjects</h2>'),
+        ];
+
         $form['form-container']['subject-details-container'] = [
             '#type' => 'fieldset',
             '#title' => 'Subject Info.'

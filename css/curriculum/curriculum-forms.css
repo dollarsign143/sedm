@@ -1,0 +1,27 @@
+.flat-input {
+    width: 100%;
+    padding: 6px 10px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.flat-element {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: transparent;
+    padding: 6px 10px;
+    width: 100%;
+}
+
+@media (min-width: 1018px) {
+
+    .inline-container-col2 > div {
+        display: inline-block;
+        width: 47%;
+        padding: 6px 10px;
+    }
+
+}

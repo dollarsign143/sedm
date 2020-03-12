@@ -17,7 +17,13 @@ public function getTemplForm(){
         '#type' => 'container',
         '#prefix' => '<div id="enrollment-eval-form-container-wrapper">',
         '#suffix' => '</div>',
-      ];
+    ];
+
+    $form['form-container']['form-title'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('<h2>Enrollment Evaluation</h2>'),
+    ];
+
     $form['form-container']['student'] = [
         '#type' => 'fieldset',
         '#title' => 'Student Info.'

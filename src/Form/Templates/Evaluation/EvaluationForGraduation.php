@@ -21,7 +21,12 @@ class EvaluationForGraduation {
             '#type' => 'container',
             '#prefix' => '<div id="eval-for-grad-form-container-wrapper">',
             '#suffix' => '</div>',
-          ];
+        ];
+
+        $form['form-container']['form-title'] = [
+            '#type' => 'item',
+            '#markup' => $this->t('<h2>Evaluation for Graduating Students</h2>'),
+        ];
 
         $form['form-container']['student-details-container'] = [
             '#type' => 'fieldset',
