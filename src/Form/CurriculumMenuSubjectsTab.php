@@ -45,6 +45,12 @@ class CurriculumMenuSubjectsTab extends FormBase {
         '#group' => 'curriculum_subject',
       );
 
+      $form['search-subject']['search-subject-container'] = [
+        '#type' => 'container',
+        '#prefix' => '<div id="search-subject-container-wrapper">',
+        '#suffix' => '</div>',
+      ];
+
       $form['add-subject'] = array(
         '#type' => 'details',
         '#title' => $this->t('Add Subject'),
@@ -53,7 +59,7 @@ class CurriculumMenuSubjectsTab extends FormBase {
 
       $form['add-subject']['add-subject-container'] = [
         '#type' => 'container',
-        '#prefix' => '<div id="enrollment-eval-container-wrapper">',
+        '#prefix' => '<div id="add-subject-container-wrapper">',
         '#suffix' => '</div>',
       ];
 
@@ -191,20 +197,6 @@ class CurriculumMenuSubjectsTab extends FormBase {
 
   } // END OF verifySubject FUNCTION
 
-
-  public function cancelSubjectAdding(array $form, FormStateInterface $form_state){
-
-    // $form_state->setRebuild();
-
-    \Drupal::logger('sedm')->error('Executed from VerifySubjectModalForm Class');
-    $response = new AjaxResponse();
-
-    $close_modal = new CloseModalDialogCommand();
-    $response->addCommand(close_modal);
-
-    return $response;
-
-}
 
     /**
    * {@inheritdoc}
