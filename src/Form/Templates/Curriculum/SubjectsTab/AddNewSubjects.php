@@ -193,13 +193,8 @@ class AddNewSubjects {
       $form['form-container']['actions']['submit'] = [
         '#type' => 'button',
         '#value' => $this->t('Submit'),
-        // '#attributes' => [
-        //   'class' => ['use-ajax',],
-        //   'data-dialog-type' => 'modal',
-        // ],
         '#ajax' => [
           'callback' => '::verifySubject',
-          'wrapper' => 'add-subject-form-container-wrapper',
           'event' => 'click',
         ],
       ];
@@ -221,8 +216,8 @@ class AddNewSubjects {
       // }
 
       $result = $dbOperations->addNewSubject($subject);
-      // var_dump($result);
-      return result;
+
+      return $result ? true : false;
 
     }
 
@@ -230,3 +225,4 @@ class AddNewSubjects {
 }
 
 ?>
+

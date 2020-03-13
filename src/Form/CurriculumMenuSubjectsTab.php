@@ -60,22 +60,12 @@ class CurriculumMenuSubjectsTab extends FormBase {
       $addNewSubject = new AddNewSubjects();
       $form['add-subject']['add-subject-container']['add-subject-form'] = $addNewSubject->getTemplForm();
 
-      $form['edit-subject'] = array(
-        '#type' => 'details',
-        '#title' => $this->t('Edit Subject'),
-        '#group' => 'curriculum_subject',
-      );
-
-      $form['delete-subject'] = array(
-        '#type' => 'details',
-        '#title' => $this->t('Delete Subject'),
-        '#group' => 'curriculum_subject',
-      );
 
       // Add the curriculum forms css styles
       $form['#attached']['library'][] = 'sedm/curriculum.forms.styles';
 
       // Add the core AJAX library.
+      // Important for ajax features
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 
       return $form;
@@ -167,22 +157,32 @@ class CurriculumMenuSubjectsTab extends FormBase {
       'add-subject-form','form-container','subject-details-container','inline-container','isActive']);
 
       $subject['departmentUID'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','inline-container','department']);
-
-      // $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifySubjectModalForm', $subject);
-
-      // $response->addCommand(new OpenDialogCommand('#verify-subject-dialog', $this->t('Add New Subject'), $modal_form, ['width' => '50%',]));
+      'add-subject-form','form-container','subject-details-container','select-container','department']);
 
       $addNewSubject = new AddNewSubjects();
 
       $result = $addNewSubject->addSubject($subject);
 
-      $content['status'] = [
-        '#type' => 'item',
-        '#markup' => $this->t('Subject Added Successfully!'), 
-      ];
-
-      $response->addCommand(new OpenDialogCommand('#verify-subject-dialog', $this->t('Add New Subject'), $content, ['width' => '50%',]));
+      if($result == true){
+        $content['status'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Subject Added Successfully!'), 
+        ];
+  
+        $modal_command = new OpenDialogCommand('#verify-subject-dialog', $this->t('Add New Subject'), $content, ['width' => '50%',]);
+  
+        $response->addCommand($modal_command);
+      } 
+      else {
+        $content['status'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Failed to add new subject!'), 
+        ];
+  
+        $modal_command = new OpenDialogCommand('#verify-subject-dialog', $this->t('Add New Subject'), $content, ['width' => '50%',]);
+  
+        $response->addCommand($modal_command);
+      }
 
       return $response;
 
@@ -192,12 +192,26 @@ class CurriculumMenuSubjectsTab extends FormBase {
   } // END OF verifySubject FUNCTION
 
 
+  public function cancelSubjectAdding(array $form, FormStateInterface $form_state){
+
+    // $form_state->setRebuild();
+
+    \Drupal::logger('sedm')->error('Executed from VerifySubjectModalForm Class');
+    $response = new AjaxResponse();
+
+    $close_modal = new CloseModalDialogCommand();
+    $response->addCommand(close_modal);
+
+    return $response;
+
+}
+
     /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-
+    \Drupal::logger('sedm')->error('Executed from CurriculumMenuSubjectsTab Class - submit form');
   }
 
 }

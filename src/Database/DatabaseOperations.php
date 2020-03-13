@@ -94,6 +94,8 @@ class DatabaseOperations {
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
+        $transaction = $connection->startTransaction();
+
         /**
          * Example Query
         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
@@ -113,24 +115,32 @@ class DatabaseOperations {
         // subject_isActive	varchar(40) NULL	
         // department_uid	int(11) NULL
 
-        $result = $connection->insert('subjects')
-        ->fields([
-            'subject_uid' => NULL,
-            'subject_code' => $subject['code'],
-            'subject_desc' => $subject['description'],
-            'subject_lecture' => $subject['lectUnits'],
-            'subject_lab' => $subject['labUnits'],
-            'subject_units' => $subject['units'],
-            'subject_lecHrs' => $subject['lecHours'],
-            'subject_labHrs' => $subject['labHours'],
-            'subject_isElective' => $subject['isElective'],
-            'subject_isActive' => $subject['isActive'],
-            'department_uid' => $subject['departmentUID'],
+        try {
 
-        ])
-        ->execute();
+            $result = $connection->insert('subjects')
+            ->fields([
+                'subject_uid' => NULL,
+                'subject_code' => $subject['code'],
+                'subject_desc' => $subject['description'],
+                'subject_lecture' => $subject['lectUnits'],
+                'subject_lab' => $subject['labUnits'],
+                'subject_units' => $subject['units'],
+                'subject_lecHrs' => $subject['lecHours'],
+                'subject_labHrs' => $subject['labHours'],
+                'subject_isElective' => $subject['isElective'],
+                'subject_isActive' => $subject['isActive'],
+                'department_uid' => $subject['departmentUID'],
+            ])
+            ->execute();
+    
+            return true;
 
-        return $result;
+        } catch (Exception $e) {
+            \Drupal::logger('type')->error($e->getMessage());
+            return false;
+        }
+
+
 
     }
 

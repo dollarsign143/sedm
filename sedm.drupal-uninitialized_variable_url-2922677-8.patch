@@ -1,0 +1,25 @@
+diff --git a/core/misc/ajax.es6.js b/core/misc/ajax.es6.js
+index 739afa1974..8768e74a19 100644
+--- a/core/misc/ajax.es6.js
++++ b/core/misc/ajax.es6.js
+@@ -407,6 +407,7 @@
+ 
+     // If no Ajax callback URL was given, use the link href or form action.
+     if (!this.url) {
++      this.url = '';
+       const $element = $(this.element);
+       if ($element.is('a')) {
+         this.url = $element.attr('href');
+diff --git a/core/misc/ajax.js b/core/misc/ajax.js
+index abe0ec2928..dfad973f13 100644
+--- a/core/misc/ajax.js
++++ b/core/misc/ajax.js
+@@ -179,6 +179,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
+     }
+ 
+     if (!this.url) {
++      this.url = '';
+       var $element = $(this.element);
+       if ($element.is('a')) {
+         this.url = $element.attr('href');
+       }
