@@ -24,4 +24,10 @@
         padding: 6px 10px;
     }
 
+    .inline-container-col3 > div {
+        display: inline-block;
+        width: 30%;
+        padding: 6px 10px;
+    }
+
 }
