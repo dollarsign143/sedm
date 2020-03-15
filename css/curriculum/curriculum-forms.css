@@ -29,5 +29,9 @@
         width: 30%;
         padding: 6px 10px;
     }
+    
+    .action-container {
+        width: 100% !important; 
+    }
 
 }
