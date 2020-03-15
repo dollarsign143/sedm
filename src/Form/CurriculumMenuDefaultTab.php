@@ -203,7 +203,7 @@ class CurriculumMenuDefaultTab extends FormBase {
             '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
             '#suffix' => '</div>',
             '#attributes' => [
-                'class' => ['sem-container', ],
+                'class' => ['inline-container-col3', ],
             ],
             ];
 
@@ -230,7 +230,7 @@ class CurriculumMenuDefaultTab extends FormBase {
                     '#title' => $this->t('Subject'),
                     '#options' => $subj_opt,
                     '#attributes' => [
-                    'class' => ['inline-select', ],
+                    'class' => ['flat-element', ],
                     ],
                 ];
 
@@ -240,7 +240,7 @@ class CurriculumMenuDefaultTab extends FormBase {
                     '#title' => $this->t('Prerequisite 1'),
                     '#options' => $subj_opt,
                     '#attributes' => [
-                    'class' => ['inline-select', ],
+                    'class' => ['flat-element', ],
                     ],
                 ];
 
@@ -250,7 +250,7 @@ class CurriculumMenuDefaultTab extends FormBase {
                     '#title' => $this->t('Prerequisite 2'),
                     '#options' => $subj_opt,
                     '#attributes' => [
-                    'class' => ['inline-select', ],
+                    'class' => ['flat-element', ],
                     ],
                 ];
 
@@ -310,7 +310,7 @@ class CurriculumMenuDefaultTab extends FormBase {
       ];
 
 
-      $form['#attached']['library'][] = 'subject_evaluation/curriculum.forms.styles';
+      $form['#attached']['library'][] = 'sedm/curriculum.forms.styles';
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 
       return $form;
