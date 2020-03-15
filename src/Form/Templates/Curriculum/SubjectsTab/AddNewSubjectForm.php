@@ -6,7 +6,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\sedm\Database\DatabaseOperations;
 
 
-class AddNewSubjects {
+class AddNewSubjectForm {
     use StringTranslationTrait;
 
     /**
@@ -185,20 +185,21 @@ class AddNewSubjects {
       // Group submit handlers in an actions element with a key of "actions" so
       // that it gets styled correctly, and so that other modules may add actions
       // to the form.
-      // $form['form-container']['actions'] = [
-      //   '#type' => 'actions',
-      // ];
+      $form['form-container']['actions'] = [
+        '#type' => 'actions',
+      ];
   
-      // // Add a submit button that handles the submission of the form.
+      // Add a submit button that handles the submission of the form.
       $form['form-container']['actions']['submit'] = [
         '#type' => 'button',
         '#value' => $this->t('Submit'),
         '#ajax' => [
           'callback' => '::verifySubject',
+          'wrapper' => 'add-subject-container-wrapper',
           'event' => 'click',
         ],
+
       ];
-  
 
       return $form;
 

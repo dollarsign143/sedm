@@ -31,13 +31,14 @@ sedm.menu.curriculum.subjects.tab:
   requirements:
     _permission: 'access content'
 
-sedm.menu.curriculum.subjects.tab.verify.subject.form:
-  path: 'sedm/menu/curriculum/tab/subjects/verify'
+sedm.menu.curriculum.subjects.tab.verify.subject.modal.form:
+  path: '/sedm/menu/curriculum/tab/subjects/verify'
   defaults:
-    _form:  '\Drupal\sedm\Form\Modals\VerifySubjectModalForm'
-    _title: 'Verify Subject'
+    _form: '\Drupal\sedm\Form\Modals\VerifySubjectModalForm' 
+    _title: 'Subjects'
   requirements:
     _permission: 'access content'
+
 
 #################### THE END OF THE ROUTES ##############################
 
