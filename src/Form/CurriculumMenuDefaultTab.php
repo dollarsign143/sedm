@@ -5,6 +5,10 @@ namespace Drupal\sedm\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Ajax\OpenDialogCommand;
+use Drupal\Core\Ajax\CloseModalDialogCommand;
+use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
@@ -341,9 +345,27 @@ class CurriculumMenuDefaultTab extends FormBase {
       }
 
       $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-      ['form-container']['curriculum']['submit'] = [
-        '#type' => 'submit',
-        '#value' => 'Submit New Created Curriculum',
+      ['form-container']['curriculum']['submit']['save'] = [
+        '#type' => 'button',
+        '#value' => $this->t('Save Curriculum'),
+        '#ajax' => [
+          'callback' => '::verifyCurriculumToSave',
+          'wrapper' => 'register-curriculum-container-wrapper',
+          'event' => 'click',
+        ],
+        
+      ];
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['submit']['publish'] = [
+        '#type' => 'button',
+        '#value' => $this->t('Publish Curriculum'),
+        '#ajax' => [
+          'callback' => '::verifyCurriculumToPublish',
+          'wrapper' => 'register-curriculum-container-wrapper',
+          'event' => 'click',
+        ],
+        
       ];
 
       // ####################### END OF REGISTER CURRICULUM PART ################################
@@ -513,10 +535,108 @@ class CurriculumMenuDefaultTab extends FormBase {
 
     $form_state->setRebuild();
   }
+
+  public function verifyCurriculumToSave(array &$form, FormStateInterface $form_state){
+
+    $response = new AjaxResponse();
+
+    if($form_state->getErrors()){
+
+      $content['form-container']['notice-container']['status_messages'] = [
+        '#type' => 'status_messages',
+      ];
+
+      $command = new OpenDialogCommand('#register-curriculum-notice-dialog',$this->t('Register New Curriculum'), $content, ['width' => '50%',]);
+
+      $response->addCommand($command);
+
+      return $response;
+
+    }
+    else {
+
+      $curr_subjs = array();
+
+      foreach(self::$years as $year => $yearTitle){
+      
+        foreach(self::$sems as $sem => $semTitle){
+  
+          $subjects = $form_state->getValue([
+            'register-curriculum','register-curriculum-container','register-curriculum-form',
+            'form-container', 'curriculum', 'subjects-container', 
+            $year, $sem, $sem.'-container', $sem.'_subjects_container']);
+
+          $curr_subjs[$year.$sem] = $subjects;
+        }
+  
+      }
+
+
+      $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm', $curr_subjs);
+
+      $command = new OpenModalDialogCommand($this->t('Register New Curriculum'), $modal_form, ['width' => '50%']);
+
+      $response->addCommand($command);
+
+      return $response;
+
+    }
+
+  }
+
+  public function verifyCurriculumToPublish(array &$form, FormStateInterface $form_state){
+
+    $response = new AjaxResponse();
+
+    if($form_state->getErrors()){
+
+      $content['form-container']['notice-container']['status_messages'] = [
+        '#type' => 'status_messages',
+      ];
+
+      $command = new OpenDialogCommand('#register-curriculum-notice-dialog',$this->t('Register New Curriculum'), $content, ['width' => '50%',]);
+
+      $response->addCommand($command);
+
+      return $response;
+
+    }
+    else {
+
+      $curr_subjs = array();
+
+      foreach(self::$years as $year => $yearTitle){
+      
+        foreach(self::$sems as $sem => $semTitle){
+  
+          $subjects = $form_state->getValue([
+            'register-curriculum','register-curriculum-container','register-curriculum-form',
+            'form-container', 'curriculum', 'subjects-container', 
+            $year, $sem, $sem.'-container', $sem.'_subjects_container']);
+
+          $curr_subjs[$year.$sem] = $subjects;
+        }
+  
+      }
+
+
+      $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToPublishModalForm', $curr_subjs);
+
+      $command = new OpenModalDialogCommand($this->t('Register New Curriculum'), $modal_form, ['width' => '50%']);
+
+      $response->addCommand($command);
+
+      return $response;
+
+    }
+
+  }
     /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+
+
   }
 
 }
