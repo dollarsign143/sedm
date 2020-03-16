@@ -108,7 +108,42 @@ class CurriculumMenuDefaultTab extends FormBase {
         '#prefix' => '<div id="curriculum-info-container-wrapper">',
         '#suffix' => '</div>',
         '#attributes'  => [
-            'class' => ['inline-container', ]
+            'class' => ['inline-container-col2', ]
+        ],
+      ];
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['curriculum-info-container']['curriculum-num'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Curriculum No.'),
+        '#required' => TRUE,
+        '#attributes' => [
+          'placeholder' => 'Ex. 2019-001',
+          'class' => ['flat-input', ],
+        ],
+      ];
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['curriculum-info-container']['curriculum-school-year'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Year'),
+        '#required' => TRUE,
+        '#maxlength' => 9,
+        '#attributes' => [
+          'placeholder' => 'Ex. 2019-2020',
+          'class' => ['flat-input', ],
+        ],
+      ];
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['curriculum-info-container']['curriculum-year'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Year'),
+        '#required' => TRUE,
+        '#maxlength' => 4,
+        '#attributes' => [
+          'placeholder' => 'Ex. 2019',
+          'class' => ['flat-input', ],
         ],
       ];
         
@@ -119,7 +154,6 @@ class CurriculumMenuDefaultTab extends FormBase {
       $dbOperations = new DatabaseOperations();
       $colleges = $dbOperations->getColleges();
       $collegeOpt = array();
-      $collegeOpt['none'] = 'NONE';
         
       foreach ($colleges as $college) {
         
@@ -132,19 +166,14 @@ class CurriculumMenuDefaultTab extends FormBase {
         '#type' => 'select',
         '#title' => $this->t('College'),
         '#options' => $collegeOpt,
-        '#attributes' => array('class' => array('inline-select')),
+        '#required' => TRUE,
+        '#attributes' => [
+          'class' => ['flat-element', ],
+        ],
         '#ajax' => [
-            'callback' => '::buildDepartment',
+            'callback' => '::buildDepartment_Program',
             'wrapper' => 'curriculum-info-container-wrapper',
         ],
-      ];
-        
-        
-      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-      ['form-container']['curriculum']['curriculum-info-container']['curriculum-year'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Year of Effectivity'),
-        '#attributes' => array('placeholder' => 'Ex. 2009', 'class' => array('inline-select')),
       ];
         
       $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
@@ -164,13 +193,27 @@ class CurriculumMenuDefaultTab extends FormBase {
        * 
        * @Variable sems: this variable is an array that holds the semesters use for year fields
        */
-      $subj_opt = [
-      'NULL' => $this->t('None'),
-      'Eng1' => $this->t('Eng1 - English 1'),
-      'Math1' => $this->t('Math1 - Mathematics 1'),
-      'Fil1' => $this->t('Fil1 - Filipino 1'),
-      ];
+      // $subj_opt = [
+      //   'NULL' => $this->t('None'),
+      //   'Eng1' => $this->t('Eng1 - English 1'),
+      //   'Math1' => $this->t('Math1 - Mathematics 1'),
+      //   'Fil1' => $this->t('Fil1 - Filipino 1'),
+      // ];
         
+      $subj_opt = array();
+      $collegeSubjects = $dbOperations->getSubjects();
+      $subj_opt['none'] = 'NONE';
+
+      if($collegeSubjects != NULL){
+  
+        foreach ($collegeSubjects as $collegeSubject) {
+  
+          $subj_opt[$collegeSubject->subject_uid] = $collegeSubject->subject_code.' - '.$collegeSubject->subject_desc;
+    
+        }
+       
+      }
+
       foreach(self::$years as $year => $yearTitle){
         
         $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
@@ -193,18 +236,18 @@ class CurriculumMenuDefaultTab extends FormBase {
 
             $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
             ['form-container']['curriculum']['subjects-container'][$year][$sem] = [
-            "#type" => 'fieldset',
-            '#title' => $semTitle,
+              "#type" => 'fieldset',
+              '#title' => $semTitle,
             ];
 
             $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
             ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'] = [
-            '#type' => 'container',
-            '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
-            '#suffix' => '</div>',
-            '#attributes' => [
-                'class' => ['inline-container-col3', ],
-            ],
+              '#type' => 'container',
+              '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
+              '#suffix' => '</div>',
+              '#attributes' => [
+                  'class' => ['inline-container-col3', ],
+              ],
             ];
 
 
@@ -259,20 +302,24 @@ class CurriculumMenuDefaultTab extends FormBase {
 
             $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
             ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container'] = [
-            '#type' => 'actions',
+              '#type' => 'actions',
+              '#attributes' => [
+                'class' => ['action-container',],
+              ],
             ];
 
             $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
             ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container']['subj-add-btn'] = [
-            '#type' => 'button',
-            '#value' => $this->t('Add Field'),
-            '#ajax' => [
-                'callback' => '::addNewField',
+              '#type' => 'submit',
+              '#name' => $year.$sem,
+              '#value' => $this->t('Add Field'),
+              '#data' => ['year' => $year, 'sem' => $sem],
+              '#submit' => ['::addNewField'],
+              '#ajax' => [
+                'callback' => '::updateSubjectCallback',
+                'event' => 'click',
                 'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
-            ],
-            // '#attributes' => [
-            //   'id' => 'curr-semester-action-btn',
-            // ],
+              ],
             ];
 
             if($subj_count > 1){
@@ -282,17 +329,13 @@ class CurriculumMenuDefaultTab extends FormBase {
                     '#type' => 'submit',
                     '#name' => $year.$sem,
                     '#value' => $this->t('Remove Field'),
-                    '#size' => 5,
                     '#data' => ['year' => $year, 'sem' => $sem],
                     '#submit' => ['::removeSubject'],
                     '#ajax' => [
-                    'callback' => '::updateSubjectCallback',
-                    'event' => 'click',
-                    'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
+                      'callback' => '::updateSubjectCallback',
+                      'event' => 'click',
+                      'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
                     ],
-                    // '#attributes' => [
-                    //   'id' => 'curr-semester-action-btn',
-                    // ],
                 ];
 
             }
@@ -302,12 +345,13 @@ class CurriculumMenuDefaultTab extends FormBase {
         
       }
         
-      // ##################################################################
-      
-      $form['form-container']['curriculum']['submit'] = [
-      '#type' => 'submit',
-      '#value' => 'Submit New Created Curriculum',
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['submit'] = [
+        '#type' => 'submit',
+        '#value' => 'Submit New Created Curriculum',
       ];
+
+      // ####################### END OF REGISTER CURRICULUM PART ################################
 
 
       $form['#attached']['library'][] = 'sedm/curriculum.forms.styles';
@@ -316,6 +360,153 @@ class CurriculumMenuDefaultTab extends FormBase {
       return $form;
   }
 
+  public function buildDepartment_Program(array &$form, FormStateInterface $form_state){
+
+    // get the value of selected college
+    $college = $form_state->getValue(['register-curriculum','register-curriculum-container',
+    'register-curriculum-form','form-container', 'curriculum', 'curriculum-info-container','college']);
+
+    // instatiate DatabaseOperations Class
+    $dbOperations = new DatabaseOperations();
+
+    // get departments
+    if($college != NULL){
+
+      $departments = $dbOperations->getDepartments($college);
+      $departmentOpt = array();
+  
+      foreach ($departments as $department) {
+  
+        $departmentOpt[$department->department_uid] = $department->department_abbrev.' - '.$department->department_name;
+  
+      }
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['curriculum-info-container']['department'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Department'),
+        '#options' => $departmentOpt,
+        '#required' => TRUE,
+        '#attributes' => [
+          'class' => ['flat-element', ],
+        ],
+      ];
+
+      $programs = $dbOperations->getProgramsByCollege($college);
+      $programOpt = array();
+  
+      foreach ($programs as $program) {
+  
+        $programOpt[$program->program_uid] = $program->program_abbrev.' - '.$program->program_name;
+  
+      }
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['curriculum-info-container']['program'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Program'),
+        '#options' => $programOpt,
+        '#required' => TRUE,
+        '#attributes' => [
+          'class' => ['flat-element', ],
+        ],
+      ];
+
+    }
+  
+    $form_state->setRebuild();
+    return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+    ['form-container']['curriculum']['curriculum-info-container'];
+    
+
+  }
+
+  public function buildProgram(array &$form, FormStateInterface $form_state){
+
+    $department = $form_state->getValue(['register-curriculum','register-curriculum-container',
+    'register-curriculum-form','form-container', 'curriculum', 'curriculum-info-container','department']);
+
+    // instatiate DatabaseOperations Class
+    $dbOperations = new DatabaseOperations();
+
+    // get department programs
+    if($department != NULL){
+
+      $programs = $dbOperations->getPrograms($department);
+      $programOpt = array();
+      $programOpt['none'] = 'NONE';
+  
+      foreach ($programs as $program) {
+  
+        $programOpt[$program->program_uid] = $program->program_abbrev.' - '.$program->program_name;
+  
+      }
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['curriculum-info-container']['program'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Program'),
+        '#options' => $programOpt,
+        '#required' => TRUE,
+        '#attributes' => [
+          'class' => ['flat-element', ],
+        ],
+      ];
+
+    }
+
+    return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+    ['form-container']['curriculum']['curriculum-info-container'];
+
+  }
+
+  public function updateSubjectCallback(array &$form, FormStateInterface $form_state){
+
+    $data = $form_state->getTriggeringElement()['#data'];
+    $year = $data['year'];
+    $sem = $data['sem'];
+    $form_state->setTriggeringElement(NULL);
+
+    return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+    ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'];
+    
+  }
+
+  public function removeSubject(array &$form, FormStateInterface $form_state){
+
+    
+    $data = $form_state->getTriggeringElement()['#data'];
+    $year = $data['year'];
+    $sem = $data['sem'];
+
+    $subject_count = $form_state->get($year.$sem.'_subj_count');
+
+    $form_state->set($year.$sem.'_subj_count', ($subject_count  - 1));
+
+    $output = 'Subject Count Before: '.$subject_count.' Subject Count After: '.($subject_count - 1).' Year: '.$year.' Semester: '.$sem; 
+
+    $this->messenger()->addMessage($output);
+
+    $form_state->setRebuild();
+
+  }
+
+  public function addNewField(array &$form, FormStateInterface $form_state){
+    
+    $data = $form_state->getTriggeringElement()['#data'];
+    $year = $data['year'];
+    $sem = $data['sem'];
+
+    $subject_count = $form_state->get($year.$sem.'_subj_count');
+
+    $form_state->set($year.$sem.'_subj_count', ($subject_count  + 1));
+
+    $output = 'Subject Count Before: '.$subject_count.' Subject Count After: '.($subject_count + 1).' Year: '.$year.' Semester: '.$sem; 
+
+    $this->messenger()->addMessage($output);
+
+    $form_state->setRebuild();
+  }
     /**
    * {@inheritdoc}
    */
