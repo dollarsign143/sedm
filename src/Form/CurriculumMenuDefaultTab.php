@@ -236,18 +236,18 @@ class CurriculumMenuDefaultTab extends FormBase {
 
             $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
             ['form-container']['curriculum']['subjects-container'][$year][$sem] = [
-            "#type" => 'fieldset',
-            '#title' => $semTitle,
+              "#type" => 'fieldset',
+              '#title' => $semTitle,
             ];
 
             $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
             ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'] = [
-            '#type' => 'container',
-            '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
-            '#suffix' => '</div>',
-            '#attributes' => [
-                'class' => ['inline-container-col3', ],
-            ],
+              '#type' => 'container',
+              '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
+              '#suffix' => '</div>',
+              '#attributes' => [
+                  'class' => ['inline-container-col3', ],
+              ],
             ];
 
 
@@ -310,15 +310,16 @@ class CurriculumMenuDefaultTab extends FormBase {
 
             $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
             ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container']['subj-add-btn'] = [
-            '#type' => 'button',
-            '#value' => $this->t('Add Field'),
-            '#ajax' => [
-                'callback' => '::addNewField',
+              '#type' => 'submit',
+              '#name' => $year.$sem,
+              '#value' => $this->t('Add Field'),
+              '#data' => ['year' => $year, 'sem' => $sem],
+              '#submit' => ['::addNewField'],
+              '#ajax' => [
+                'callback' => '::updateSubjectCallback',
+                'event' => 'click',
                 'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
-            ],
-            // '#attributes' => [
-            //   'id' => 'curr-semester-action-btn',
-            // ],
+              ],
             ];
 
             if($subj_count > 1){
@@ -328,7 +329,6 @@ class CurriculumMenuDefaultTab extends FormBase {
                     '#type' => 'submit',
                     '#name' => $year.$sem,
                     '#value' => $this->t('Remove Field'),
-                    '#size' => 5,
                     '#data' => ['year' => $year, 'sem' => $sem],
                     '#submit' => ['::removeSubject'],
                     '#ajax' => [
@@ -336,9 +336,6 @@ class CurriculumMenuDefaultTab extends FormBase {
                       'event' => 'click',
                       'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
                     ],
-                    // '#attributes' => [
-                    //   'id' => 'curr-semester-action-btn',
-                    // ],
                 ];
 
             }
@@ -492,6 +489,23 @@ class CurriculumMenuDefaultTab extends FormBase {
 
     $form_state->setRebuild();
 
+  }
+
+  public function addNewField(array &$form, FormStateInterface $form_state){
+    
+    $data = $form_state->getTriggeringElement()['#data'];
+    $year = $data['year'];
+    $sem = $data['sem'];
+
+    $subject_count = $form_state->get($year.$sem.'_subj_count');
+
+    $form_state->set($year.$sem.'_subj_count', ($subject_count  + 1));
+
+    $output = 'Subject Count Before: '.$subject_count.' Subject Count After: '.($subject_count + 1).' Year: '.$year.' Semester: '.$sem; 
+
+    $this->messenger()->addMessage($output);
+
+    $form_state->setRebuild();
   }
     /**
    * {@inheritdoc}
