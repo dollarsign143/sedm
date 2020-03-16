@@ -259,7 +259,7 @@ class CurriculumMenuDefaultTab extends FormBase {
             // $form_state->set($year.$sem.'_subj_count', $subj_count);
             // }
               if(empty($subj_fields)){
-                $subj_fields = [1, 2, 3, 4];
+                $subj_fields = [1, 2];
                 $form_state->set($year.$sem.'_subj_fields', $subj_fields);
               }
 
@@ -327,7 +327,7 @@ class CurriculumMenuDefaultTab extends FormBase {
                 '#type' => 'submit',
                 '#name' => $year.$sem,
                 '#value' => $this->t('Add Field'),
-                '#data' => ['year' => $year, 'sem' => $sem, 'subj_fields' => $subj_fields],
+                '#data' => ['year' => $year, 'sem' => $sem,],
                 '#submit' => ['::addNewField'],
                 '#ajax' => [
                   'callback' => '::updateSubjectCallback',
@@ -499,7 +499,7 @@ class CurriculumMenuDefaultTab extends FormBase {
     $data = $form_state->getTriggeringElement()['#data'];
     $year = $data['year'];
     $sem = $data['sem'];
-    $subj_fields = $data['subj_fields'];
+    $subj_fields = $form_state->get($year.$sem.'_subj_fields');
 
     $last_subj_field_ele = end($subj_fields);
 
