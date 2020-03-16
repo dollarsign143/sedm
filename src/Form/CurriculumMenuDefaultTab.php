@@ -193,12 +193,6 @@ class CurriculumMenuDefaultTab extends FormBase {
        * 
        * @Variable sems: this variable is an array that holds the semesters use for year fields
        */
-      // $subj_opt = [
-      //   'NULL' => $this->t('None'),
-      //   'Eng1' => $this->t('Eng1 - English 1'),
-      //   'Math1' => $this->t('Math1 - Mathematics 1'),
-      //   'Fil1' => $this->t('Fil1 - Filipino 1'),
-      // ];
         
       $subj_opt = array();
       $collegeSubjects = $dbOperations->getSubjects();
@@ -246,7 +240,7 @@ class CurriculumMenuDefaultTab extends FormBase {
               '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
               '#suffix' => '</div>',
               '#attributes' => [
-                  'class' => ['inline-container-col3', ],
+                  'class' => ['inline-container-col4', ],
               ],
             ];
 
@@ -256,19 +250,23 @@ class CurriculumMenuDefaultTab extends FormBase {
               * created on selected year and sem
               */
 
-            $subj_count = $form_state->get($year.$sem.'_subj_count');
+            // $subj_count = $form_state->get($year.$sem.'_subj_count');
+            $subj_fields = $form_state->get($year.$sem.'_subj_fields');
 
             // We have to ensure that there is at least one name field.
-            if ($subj_count === NULL) {
-            $subj_count = 3;
-            $form_state->set($year.$sem.'_subj_count', $subj_count);
-            }
+            // if ($subj_count === NULL) {
+            // $subj_count = 3;
+            // $form_state->set($year.$sem.'_subj_count', $subj_count);
+            // }
+              if(empty($subj_fields)){
+                $subj_fields = [1, 2];
+                $form_state->set($year.$sem.'_subj_fields', $subj_fields);
+              }
 
-
-            for($i = 0; $i < $subj_count; $i++){
+            foreach($subj_fields as $subj_field){
 
                 $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-                ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$i]['subj_description'] = [
+                ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$subj_field]['subj_description'] = [
                     '#type' => 'select',
                     '#title' => $this->t('Subject'),
                     '#options' => $subj_opt,
@@ -278,7 +276,7 @@ class CurriculumMenuDefaultTab extends FormBase {
                 ];
 
                 $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-                ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$i]['subj_prerequi_1'] = [
+                ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$subj_field]['subj_prerequi_1'] = [
                     '#type' => 'select',
                     '#title' => $this->t('Prerequisite 1'),
                     '#options' => $subj_opt,
@@ -288,7 +286,7 @@ class CurriculumMenuDefaultTab extends FormBase {
                 ];
 
                 $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-                ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$i]['subj_prerequi_2'] = [
+                ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$subj_field]['subj_prerequi_2'] = [
                     '#type' => 'select',
                     '#title' => $this->t('Prerequisite 2'),
                     '#options' => $subj_opt,
@@ -297,54 +295,51 @@ class CurriculumMenuDefaultTab extends FormBase {
                     ],
                 ];
 
+                if(count($subj_fields) > 1){
 
+                  $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+                  ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$subj_field]['subj-remove-btn'] = [
+                      '#type' => 'submit',
+                      '#name' => $year.$sem.$subj_field,
+                      '#value' => $this->t('Remove Field'),
+                      '#data' => ['year' => $year, 'sem' => $sem, 'subj_field' => $subj_field],
+                      '#submit' => ['::removeSubject'],
+                      '#ajax' => [
+                        'callback' => '::updateSubjectCallback',
+                        'event' => 'click',
+                        'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
+                      ],
+                  ];
+  
+                }
             }
 
-            $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-            ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container'] = [
-              '#type' => 'actions',
-              '#attributes' => [
-                'class' => ['action-container',],
-              ],
-            ];
-
-            $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-            ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container']['subj-add-btn'] = [
-              '#type' => 'submit',
-              '#name' => $year.$sem,
-              '#value' => $this->t('Add Field'),
-              '#data' => ['year' => $year, 'sem' => $sem],
-              '#submit' => ['::addNewField'],
-              '#ajax' => [
-                'callback' => '::updateSubjectCallback',
-                'event' => 'click',
-                'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
-              ],
-            ];
-
-            if($subj_count > 1){
-
-                $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-                ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container']['subj-remove-btn'] = [
-                    '#type' => 'submit',
-                    '#name' => $year.$sem,
-                    '#value' => $this->t('Remove Field'),
-                    '#data' => ['year' => $year, 'sem' => $sem],
-                    '#submit' => ['::removeSubject'],
-                    '#ajax' => [
-                      'callback' => '::updateSubjectCallback',
-                      'event' => 'click',
-                      'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
-                    ],
-                ];
-
-            }
+              $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+              ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container'] = [
+                '#type' => 'actions',
+                '#attributes' => [
+                  'class' => ['action-container',],
+                ],
+              ];
+  
+              $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+              ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'-action-container']['subj-add-btn'] = [
+                '#type' => 'submit',
+                '#name' => $year.$sem,
+                '#value' => $this->t('Add Field'),
+                '#data' => ['year' => $year, 'sem' => $sem,],
+                '#submit' => ['::addNewField'],
+                '#ajax' => [
+                  'callback' => '::updateSubjectCallback',
+                  'event' => 'click',
+                  'wrapper' => 'subjects-'.$year.'-'.$sem.'-container-wrapper',
+                ],
+              ];
 
         }
-              
-        
+
       }
-        
+
       $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
       ['form-container']['curriculum']['submit'] = [
         '#type' => 'submit',
@@ -358,7 +353,10 @@ class CurriculumMenuDefaultTab extends FormBase {
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 
       return $form;
+              
+        
   }
+        
 
   public function buildDepartment_Program(array &$form, FormStateInterface $form_state){
 
@@ -478,12 +476,16 @@ class CurriculumMenuDefaultTab extends FormBase {
     $data = $form_state->getTriggeringElement()['#data'];
     $year = $data['year'];
     $sem = $data['sem'];
+    $subj_field = $data['subj_field'];
 
-    $subject_count = $form_state->get($year.$sem.'_subj_count');
+    $subject_fields = $form_state->get($year.$sem.'_subj_fields');
 
-    $form_state->set($year.$sem.'_subj_count', ($subject_count  - 1));
-
-    $output = 'Subject Count Before: '.$subject_count.' Subject Count After: '.($subject_count - 1).' Year: '.$year.' Semester: '.$sem; 
+    if (($key = array_search($subj_field, $subject_fields)) !== false) {
+      unset($subject_fields[$key]);
+      $form_state->set($year.$sem.'_subj_fields', ($subject_fields));
+    }
+    
+    $output = 'Field has been removed! Year: '.$year.' Semester: '.$sem; 
 
     $this->messenger()->addMessage($output);
 
@@ -491,17 +493,21 @@ class CurriculumMenuDefaultTab extends FormBase {
 
   }
 
+
   public function addNewField(array &$form, FormStateInterface $form_state){
     
     $data = $form_state->getTriggeringElement()['#data'];
     $year = $data['year'];
     $sem = $data['sem'];
+    $subj_fields = $form_state->get($year.$sem.'_subj_fields');
 
-    $subject_count = $form_state->get($year.$sem.'_subj_count');
+    $last_subj_field_ele = end($subj_fields);
 
-    $form_state->set($year.$sem.'_subj_count', ($subject_count  + 1));
+    $subj_fields[] = $last_subj_field_ele + 1;
 
-    $output = 'Subject Count Before: '.$subject_count.' Subject Count After: '.($subject_count + 1).' Year: '.$year.' Semester: '.$sem; 
+    $form_state->set($year.$sem.'_subj_fields', $subj_fields);
+
+    $output = 'A new field has been added! Year: '.$year.' Semester: '.$sem; 
 
     $this->messenger()->addMessage($output);
 
