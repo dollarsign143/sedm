@@ -23,6 +23,24 @@ sedm.menu.curriculum.default.tab:
   requirements:
     _permission: 'access content'
 
+sedm.menu.curriculum.default.tab.verify.curriculum.to.save.modal.form:
+  path: '/sedm/menu/curriculum/tab/default/verify/to/save'
+  defaults:
+    _form: '\Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm' 
+    _title: 'Verify Curriculum Registration'
+  requirements:
+    _permission: 'access content'
+
+sedm.menu.curriculum.default.tab.verify.curriculum.to.publish.modal.form:
+  path: '/sedm/menu/curriculum/tab/default/verify/to/publish'
+  defaults:
+    _form: '\Drupal\sedm\Form\Modals\VerifyCurriculumToPublishModalForm' 
+    _title: 'Verify Curriculum Registration'
+  requirements:
+    _permission: 'access content'
+
+# ++++++++++++++++++ END OF CURRICULUM DEFAULT TAB ROUTES ++++++++++++++++
+
 sedm.menu.curriculum.subjects.tab:
   path: '/sedm/menu/curriculum/tab/subjects'
   defaults:
