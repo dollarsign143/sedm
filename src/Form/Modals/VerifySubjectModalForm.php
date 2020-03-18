@@ -78,7 +78,7 @@ class VerifySubjectModalForm extends FormBase {
     return $form;
   }
 
-  public function proceedAddingSubject(array $form, FormStateInterface $form_state){
+  public function proceedAddingSubject(array &$form, FormStateInterface $form_state){
     $response = new AjaxResponse();
     $command = new CloseModalDialogCommand();
     $response->addCommand($command);
@@ -91,7 +91,7 @@ class VerifySubjectModalForm extends FormBase {
     return $response;
   }
 
-  public function closeModalDialog(array $form, FormStateInterface $form_state){
+  public function closeModalDialog(array &$form, FormStateInterface $form_state){
 
     $response = new AjaxResponse();
     $command = new CloseModalDialogCommand();
