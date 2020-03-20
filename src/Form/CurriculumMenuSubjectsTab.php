@@ -372,32 +372,9 @@ class CurriculumMenuSubjectsTab extends FormBase {
       $subject['departmentUID'] = $form_state->getValue(['add-subject','add-subject-container',
       'add-subject-form','form-container','subject-details-container','select-container','department']);
 
-      // $addNewSubject = new AddNewSubjects();
+      $_SESSION['sedm']['subject'] = $subject; // final approach to be made f*ck
 
-      // $result = $addNewSubject->addSubject($subject);
-
-      // if($result == true){
-      //   $content['status'] = [
-      //     '#type' => 'item',
-      //     '#markup' => $this->t('Subject Added Successfully!'), 
-      //   ];
-  
-      //   $modal_command = new OpenDialogCommand('#verify-subject-dialog', $this->t('Add New Subject'), $content, ['width' => '50%',]);
-  
-      //   $response->addCommand($modal_command);
-      // } 
-      // else {
-      //   $content['status'] = [
-      //     '#type' => 'item',
-      //     '#markup' => $this->t('Failed to add new subject!'), 
-      //   ];
-  
-      //   $modal_command = new OpenDialogCommand('#verify-subject-dialog', $this->t('Add New Subject'), $content, ['width' => '50%',]);
-  
-      //   $response->addCommand($modal_command);
-      // }
-
-      $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifySubjectModalForm');
+      $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifySubjectModalForm', $subject);
 
       $command = new OpenModalDialogCommand($this->t('Add new Subject'), $modal_form, ['width' => '50%']);
 
