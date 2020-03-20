@@ -201,6 +201,7 @@ class CurriculumMenuDefaultTab extends FormBase {
       $subj_opt = array();
       $collegeSubjects = $dbOperations->getSubjects();
       $subj_opt['none'] = 'NONE';
+      $subj_opt['elective'] = 'ELECTIVE';
 
       if($collegeSubjects != NULL){
   
@@ -343,6 +344,114 @@ class CurriculumMenuDefaultTab extends FormBase {
         }
 
       }
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['subjects-container']['elective'] = [
+          '#type' => 'details',
+          '#title' => 'Electives',
+      ];
+      
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['subjects-container']['elective']['description'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('The subjects listed below are elective subjects.'),
+      ];
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['subjects-container']['elective']['subjects-elective-container'] = [
+        '#type' => 'container',
+        '#prefix' => '<div id="subjects-elective-container-wrapper">',
+        '#suffix' => '</div>',
+        '#attributes' => [
+            'class' => ['inline-container-col4', ],
+        ],
+      ];
+
+      $electFields = $form_state->get('elective_fields');
+
+      if(empty($electFields)){
+        $electFields = [1, 2];
+        $form_state->set('elective_fields', $electFields);
+      }
+
+      foreach($electFields as $electField){
+
+        $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+        ['form-container']['curriculum']['subjects-container']
+        ['elective']['subjects-elective-container'][$electField]['subj_description'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Subject'),
+            '#options' => $subj_opt,
+            '#attributes' => [
+            'class' => ['flat-element', ],
+            ],
+        ];
+
+        $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+        ['form-container']['curriculum']['subjects-container']
+        ['elective']['subjects-elective-container'][$electField]['subj_prerequi_1'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Prerequisite 1'),
+            '#options' => $subj_opt,
+            '#attributes' => [
+            'class' => ['flat-element', ],
+            ],
+        ];
+
+        $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+        ['form-container']['curriculum']['subjects-container']
+        ['elective']['subjects-elective-container'][$electField]['subj_prerequi_2'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Prerequisite 2'),
+            '#options' => $subj_opt,
+            '#attributes' => [
+            'class' => ['flat-element', ],
+            ],
+        ];
+
+        if(count($electFields) > 1){
+
+          $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+          ['form-container']['curriculum']['subjects-container']
+          ['elective']['subjects-elective-container'][$electField]['subj-remove-btn'] = [
+              '#type' => 'submit',
+              '#name' => 'removeElectiveField',
+              '#value' => $this->t('Remove Field'),
+              '#data' => ['elective_field' => $electField,],
+              '#submit' => ['::removeElectiveSubject'],
+              '#ajax' => [
+                'callback' => '::updateElectiveSubjectCallback',
+                'event' => 'click',
+                'wrapper' => 'subjects-elective-container-wrapper',
+              ],
+          ];
+
+        }
+    }
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['subjects-container']
+      ['elective']['subjects-elective-container']['elective-action-container'] = [
+        '#type' => 'actions',
+        '#attributes' => [
+          'class' => ['action-container',],
+        ],
+      ];
+
+      $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+      ['form-container']['curriculum']['subjects-container']
+      ['elective']['subjects-elective-container']['elective-action-container']['subj-add-btn'] = [
+        '#type' => 'submit',
+        '#name' => 'addElectiveField',
+        '#value' => $this->t('Add Field'),
+        '#submit' => ['::addNewElectiveField'],
+        '#ajax' => [
+          'callback' => '::updateElectiveSubjectCallback',
+          'event' => 'click',
+          'wrapper' => 'subjects-elective-container-wrapper',
+        ],
+      ];
+
 
       $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
       ['form-container']['curriculum']['submit']['save'] = [
@@ -536,6 +645,53 @@ class CurriculumMenuDefaultTab extends FormBase {
     $form_state->setRebuild();
   }
 
+  /**
+   * Additional function addressing the electives
+   */
+  public function updateElectiveSubjectCallback(array &$form, FormStateInterface $form_state){
+
+    return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
+    ['form-container']['curriculum']['subjects-container']['elective']['subjects-elective-container'];
+
+  }
+
+  public function removeElectiveSubject(array &$form, FormStateInterface $form_state){
+    $data = $form_state->getTriggeringElement()['#data'];
+    $elective_field = $data['elective_field'];
+    $elective_fields = $form_state->get('elective_fields');
+
+    if (($key = array_search($elective_field, $elective_fields)) !== false) {
+      unset($elective_fields[$key]);
+      $form_state->set('elective_fields', $elective_fields);
+    }
+    
+    $output = 'Field has been removed!'; 
+
+    $this->messenger()->addMessage($output);
+
+    $form_state->getTriggeringElement(NULL);
+    $form_state->setRebuild();
+
+  }
+
+  public function addNewElectiveField(array &$form, FormStateInterface $form_state){
+    $elective_fields = $form_state->get('elective_fields');
+
+    $last_elective_field_ele = end($elective_fields);
+
+    $elective_fields[] = $last_elective_field_ele + 1;
+
+    $form_state->set('elective_fields', $elective_fields);
+
+    $output = 'A new field has been added!'; 
+
+    $this->messenger()->addMessage($output);
+
+    $form_state->setRebuild();
+  }
+
+  // END OF ADDITIONAL FUNCTIONS
+
   public function verifyCurriculumToSave(array &$form, FormStateInterface $form_state){
 
     $response = new AjaxResponse();
@@ -571,6 +727,13 @@ class CurriculumMenuDefaultTab extends FormBase {
   
       }
 
+      $electives = $form_state->getValue([
+        'register-curriculum','register-curriculum-container','register-curriculum-form',
+        'form-container','curriculum','subjects-container',
+        'elective','subjects-elective-container'
+      ]);
+
+      $curr_subjs['electives'] = $electives;
 
       $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm', $curr_subjs);
 
