@@ -40,12 +40,17 @@ public function getTemplForm(){
     $form['form-container']['student']['details-container']['idNumber'] = [
         '#type' => 'textfield',
         '#title' => 'Id number',
-        '#attributes' => array('placeholder' => array('Ex. 2015-0001')),
+        '#attributes' => [
+            'class' => ['flat-input',],
+            'placeholder' => $this->t('2015-0001'),
+        ],
     ];
 
     $form['form-container']['student']['details-container']['select_container'] = [
         '#type' => 'container',
-        '#attributes' => array('class' => array('select-container')),
+        '#attributes' => [
+            'class' => ['inline-container-col2',],
+        ],
     ];
 
     $form['form-container']['student']['details-container']['select_container']['yearLevel'] = [
@@ -58,7 +63,9 @@ public function getTemplForm(){
             '4' => 'Fourth Year',
             '5' => 'Fifth Year',
         ],
-        '#attributes' => array('class' => array('inline-select')),
+        '#attributes' => [
+            'class' => ['flat-element',],
+        ],
     ];
 
     $form['form-container']['student']['details-container']['select_container']['semester'] = [
@@ -69,13 +76,18 @@ public function getTemplForm(){
             '2' => 'Second Semester',
             '3' => 'Summer',
         ],
-        '#attributes' => array('class' => array('inline-select')),
+        '#attributes' => [
+            'class' => ['flat-element',],
+        ],
     ];
 
     $form['form-container']['student']['details-container']['evaluate'] = [
         '#type' => 'submit',
         '#value' => 'Evaluate Subjects',
         '#tabCaller' => 'enrollmentEval',
+        '#attributes' => [
+            'class' => ['flat-btn',],
+        ],
         '#ajax' => [
             'callback' => '::searchAvailableSubjects',
             'wrapper' => 'enrollment-eval-form-container-wrapper', 

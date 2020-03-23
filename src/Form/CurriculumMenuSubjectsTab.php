@@ -372,7 +372,7 @@ class CurriculumMenuSubjectsTab extends FormBase {
       $subject['departmentUID'] = $form_state->getValue(['add-subject','add-subject-container',
       'add-subject-form','form-container','subject-details-container','select-container','department']);
 
-      $_SESSION['sedm']['subject'] = $subject; // final approach to be made f*ck
+      $_SESSION['sedm']['subject'] = $subject; // final approach to be made
 
       $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifySubjectModalForm', $subject);
 

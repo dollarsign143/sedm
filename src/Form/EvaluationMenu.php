@@ -81,6 +81,7 @@ class EvaluationMenu extends FormBase {
       $evalForGrad = new EvaluationForGraduation();
       $form['eval_for_graduation']['eval-for-graduation-container']['eval-for-grad-form'] = $evalForGrad->getTemplForm();
 
+      $form['#attached']['library'][] = 'sedm/evaluation.forms.styles';
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
 
       return $form;

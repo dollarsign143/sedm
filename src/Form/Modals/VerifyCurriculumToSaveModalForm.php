@@ -77,6 +77,23 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
   public function proceedSavingCurriculum(array &$form, FormStateInterface $form_state){
 
     $curri_subjs = $form_state->get('curriculum_subjects');
+    $response = new AjaxResponse();
+
+    $modal_form['electives'] = [
+      '#type' => 'container'
+    ];
+
+    foreach($curri_subjs['electives'] as $elective){
+      $modal_form['elective']['subject'][$elective]['description'] = [
+        '#type' => 'item',
+        '#markup' => $elective['description'],
+      ];
+    }
+
+    $command = new OpenModalDialogCommand($this->t('Sample'), $modal_form, ['width' => '50%']);
+    $response->addCommand($command);
+
+    return $response;
 
   }
 

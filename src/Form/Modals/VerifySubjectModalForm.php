@@ -185,12 +185,14 @@ class VerifySubjectModalForm extends FormBase {
         '#type' => 'item',
         '#markup' => $this->t('Subject has been added successfully!'),
       ];
+      unset($_SESSION['sedm']['subject']);
     }
     else {
       $content['message'] = [
         '#type' => 'item',
         '#markup' => $this->t('ERROR! Failed to add the subjec. Please check the error logs!'),
       ];
+      unset($_SESSION['sedm']['subject']);
     }
     $command = new OpenDialogCommand('#success-adding-subject', $this->t('Successful'), $content, ['width' => '50%']);
     $response->addCommand($command);
@@ -202,8 +204,8 @@ class VerifySubjectModalForm extends FormBase {
     $response = new AjaxResponse();
     $command = new CloseModalDialogCommand();
     $response->addCommand($command);
+    unset($_SESSION['sedm']['subject']);
     return $response;
-
   }
 
   /**

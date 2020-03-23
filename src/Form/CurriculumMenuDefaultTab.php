@@ -174,6 +174,7 @@ class CurriculumMenuDefaultTab extends FormBase {
         '#attributes' => [
           'class' => ['flat-element', ],
         ],
+        '#submit' => ['::form_rebuild'],
         '#ajax' => [
             'callback' => '::buildDepartment_Program',
             'wrapper' => 'curriculum-info-container-wrapper',
@@ -197,11 +198,16 @@ class CurriculumMenuDefaultTab extends FormBase {
        * 
        * @Variable sems: this variable is an array that holds the semesters use for year fields
        */
-        
+      $college = $form_state->get('selected_college');
+      if($college === NULL){
+        $collegeSubjects = $dbOperations->getSubjects();
+      }
+      else {
+        $collegeSubjects = $dbOperations->getSubjectsByCollege($college);
+      }
       $subj_opt = array();
-      $collegeSubjects = $dbOperations->getSubjects();
+      // $collegeSubjects = $dbOperations->getSubjects();
       $subj_opt['none'] = 'NONE';
-      $subj_opt['elective'] = 'ELECTIVE';
 
       if($collegeSubjects != NULL){
   
@@ -308,7 +314,7 @@ class CurriculumMenuDefaultTab extends FormBase {
                       '#name' => $year.$sem.$subj_field,
                       '#value' => $this->t('Remove Field'),
                       '#data' => ['year' => $year, 'sem' => $sem, 'subj_field' => $subj_field],
-                      '#submit' => ['::removeSubject'],
+                      '#submit' => ['::removeField'],
                       '#ajax' => [
                         'callback' => '::updateSubjectCallback',
                         'event' => 'click',
@@ -495,6 +501,7 @@ class CurriculumMenuDefaultTab extends FormBase {
     $college = $form_state->getValue(['register-curriculum','register-curriculum-container',
     'register-curriculum-form','form-container', 'curriculum', 'curriculum-info-container','college']);
 
+    $form_state->set('selected_college', $college);
     // instatiate DatabaseOperations Class
     $dbOperations = new DatabaseOperations();
 
@@ -546,8 +553,16 @@ class CurriculumMenuDefaultTab extends FormBase {
     $form_state->setRebuild();
     return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
     ['form-container']['curriculum']['curriculum-info-container'];
-    
 
+  }
+
+  public function form_rebuild(array &$form, FormStateInterface $form_state){
+    $college = $form_state->getValue(['register-curriculum','register-curriculum-container',
+    'register-curriculum-form','form-container', 'curriculum', 'curriculum-info-container','college']);
+
+    $form_state->set('selected_college', $college);
+
+    $form_state->setRebuild();
   }
 
   public function buildProgram(array &$form, FormStateInterface $form_state){
@@ -601,7 +616,7 @@ class CurriculumMenuDefaultTab extends FormBase {
     
   }
 
-  public function removeSubject(array &$form, FormStateInterface $form_state){
+  public function removeField(array &$form, FormStateInterface $form_state){
 
     
     $data = $form_state->getTriggeringElement()['#data'];
@@ -616,7 +631,7 @@ class CurriculumMenuDefaultTab extends FormBase {
       $form_state->set($year.$sem.'_subj_fields', ($subject_fields));
     }
     
-    $output = 'Field has been removed! Year: '.$year.' Semester: '.$sem; 
+    $output = 'Field has been removed!';
 
     $this->messenger()->addMessage($output);
 
@@ -638,7 +653,7 @@ class CurriculumMenuDefaultTab extends FormBase {
 
     $form_state->set($year.$sem.'_subj_fields', $subj_fields);
 
-    $output = 'A new field has been added! Year: '.$year.' Semester: '.$sem; 
+    $output = 'A new field has been added!';
 
     $this->messenger()->addMessage($output);
 
@@ -782,6 +797,14 @@ class CurriculumMenuDefaultTab extends FormBase {
   
       }
 
+      $electives = $form_state->getValue([
+        'register-curriculum','register-curriculum-container','register-curriculum-form',
+        'form-container','curriculum','subjects-container',
+        'elective','subjects-elective-container'
+      ]);
+
+      $curr_subjs['electives'] = $electives;
+
 
       $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToPublishModalForm', $curr_subjs);
 
@@ -794,11 +817,11 @@ class CurriculumMenuDefaultTab extends FormBase {
     }
 
   }
+  
     /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
 
   }
 
