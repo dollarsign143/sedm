@@ -633,6 +633,8 @@ class CurriculumMenuDefaultTab extends FormBase {
 
   }
 
+  // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  // functions listed below are experimental
   public function form_rebuild(array &$form, FormStateInterface $form_state){
     $college = $form_state->getValue(['register-curriculum','register-curriculum-container',
     'register-curriculum-form','form-container', 'curriculum', 'curriculum-info-container','college']);
@@ -680,6 +682,7 @@ class CurriculumMenuDefaultTab extends FormBase {
     ['form-container']['curriculum']['curriculum-info-container'];
 
   }
+  // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   public function updateSubjectCallback(array &$form, FormStateInterface $form_state){
 
@@ -843,10 +846,20 @@ class CurriculumMenuDefaultTab extends FormBase {
 
       $curr_subjs['electives'] = $electives;
 
-      $_SESSION['sedm']['curr_subjs'] = $curr_subjs;
-      $_SESSION['sedm']['curr_infos'] = $curr_info; 
+      $CDO = new CurriculumDatabaseOperations();
+      $isCurriAvailable = $CDO->isCurriculumAvailable($curr_info['curr_program'], $curr_info['curr_num']);
 
-      $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm');
+      if($isCurriAvailable){
+        $_SESSION['sedm']['curr_subjs'] = $curr_subjs;
+        $_SESSION['sedm']['curr_infos'] = $curr_info; 
+        $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm');
+      }
+      else {
+        $modal_form['message'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Curriculum number is not available. Please check the saved/published curriculums!')
+        ];
+      }
 
       $command = new OpenModalDialogCommand($this->t('Register New Curriculum'), $modal_form, ['width' => '50%']);
 

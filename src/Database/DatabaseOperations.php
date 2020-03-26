@@ -205,10 +205,37 @@ class DatabaseOperations {
     public function isSubjectAvailable($subj_code, $subj_cat){
 
         $result = $this->getSubjectByCode($subj_code, $subj_cat);
-        return $result ? NULL : true;
+        return ($result == NULL) ? true : false;
         
     }
 
+    public function getCurriculumInfo($programUID, $curri_num){
+
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query("SELECT * FROM {curriculums}
+        WHERE program_uid = :programUID AND curriculum_no = :curri_num", 
+        [
+            ':programUID' => $programUID,
+            ':curri_num' => $curri_num,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
+    public function isCurriculumAvailable($programUID, $curri_num){
+
+        $result = $this->getCurriculumInfo($programUID, $curri_num);
+        return ($result == NULL) ? true : false;
+        
+    }
 
 }
 
