@@ -23,9 +23,8 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
       /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $subjects = array()) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
 
-    $form_state->set('curriculum_subjects', $subjects);
     $form['#tree'] = TRUE;
     $form['modal-form-container'] = [
         '#type' => 'container',
@@ -76,7 +75,20 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
 
   public function proceedSavingCurriculum(array &$form, FormStateInterface $form_state){
 
-    $curri_subjs = $form_state->get('curriculum_subjects');
+    $response = new AjaxResponse();
+    
+    $curr_infos = $_SESSION['sedm']['curr_infos']; 
+    $curr_subjs = $_SESSION['sedm']['curr_subjs'];
+    
+    $modal_form['message'] = [
+      '#type' => 'item',
+      '#markup' => $this->t('Curriculum has been saved successfully!'),
+    ];
+
+    $command = new OpenModalDialogCommand($this->t('Sample'), $modal_form, ['width' => '50%']);
+    $response->addCommand($command);
+
+    return $response;
 
   }
 
@@ -94,7 +106,7 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-}
+  }
   
 
 }

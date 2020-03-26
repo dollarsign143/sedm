@@ -11,7 +11,7 @@ use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 
-use Drupal\sedm\Database\DatabaseOperations;
+use Drupal\sedm\Database\CurriculumDatabaseOperations;
 
 class VerifySubjectModalForm extends FormBase {
 
@@ -71,54 +71,23 @@ class VerifySubjectModalForm extends FormBase {
         'class' => ['flat-input',],
       ],
     ];
+    $CDO = new CurriculumDatabaseOperations();
+    $subj_cat = $CDO->getSubjectCategory($subject['subjCat']);
+    
+    foreach($subj_cat as $cat){
+      $category = $cat->subjCat_name;
+    }
+    // Subject Category
+    $form['modal-form-container']['subject-info-fieldset']['subject-info-container']['subject-cat'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Subject Category'),
+      '#default_value' => $category,
+      '#disabled' => TRUE,
+      '#attributes' => [
+        'class' => ['flat-input',],
+      ],
+    ];
 // ++++++++++++++++++++++++++++++++++++++++++++++
-// ----------------------------------------------------------------------------
-// ++++++++++++++++++++++++++++++++++++++++++++++
-    // Subject Units
-    $form['modal-form-container']['subject-info-fieldset']['subject-info-container']['subject-units'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Subject Units'),
-      '#default_value' => $subject['units'],
-      '#disabled' => TRUE,
-      '#attributes' => [
-        'class' => ['flat-input',],
-      ],
-    ];
-// +++++++++++++++++++++++++++++++++++++++++++++++
-// -----------------------------------------------------------------------------
-// +++++++++++++++++++++++++++++++++++++++++++++++
-    // Subject Lecture Hours
-    $form['modal-form-container']['subject-info-fieldset']['subject-info-container']['subject-lect-hours'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Lecture Hours'),
-      '#default_value' => $subject['lecHours'],
-      '#disabled' => TRUE,
-      '#attributes' => [
-        'class' => ['flat-input',],
-      ],
-    ];
-    // Subject Lab Hours
-    $form['modal-form-container']['subject-info-fieldset']['subject-info-container']['subject-lab-hours'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Laboratory Hours'),
-      '#default_value' => $subject['labHours'],
-      '#disabled' => TRUE,
-      '#attributes' => [
-        'class' => ['flat-input',],
-      ],
-    ];
-// ++++++++++++++++++++++++++++++++++++++++++++++++
-// -----------------------------------------------------------------------------
-    // Subject is elective
-    $form['modal-form-container']['subject-info-fieldset']['subject-info-container']['subject-is-elective'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Subject is Elective?'),
-      '#default_value' => $subject['isElective'] ? 'elective' : 'No',
-      '#disabled' => TRUE,
-      '#attributes' => [
-        'class' => ['flat-input',],
-      ],
-    ];
     // Subject is active
     $form['modal-form-container']['subject-info-fieldset']['subject-info-container']['subject-is-active'] = [
       '#type' => 'textfield',
@@ -177,20 +146,23 @@ class VerifySubjectModalForm extends FormBase {
     $command = new CloseModalDialogCommand();
     $response->addCommand($command);
 
-    $dbOperations = new DatabaseOperations(); // instantiate DatabaseOperations Class
+    $CDO = new CurriculumDatabaseOperations(); // instantiate DatabaseOperations Class
     $subj_info = $_SESSION['sedm']['subject'];
-    $result = $dbOperations->addNewSubject($subj_info);
+    $result = $CDO->addNewSubject($subj_info);
+    
     if($result){
       $content['message'] = [
         '#type' => 'item',
         '#markup' => $this->t('Subject has been added successfully!'),
       ];
+      unset($_SESSION['sedm']['subject']);
     }
     else {
       $content['message'] = [
         '#type' => 'item',
         '#markup' => $this->t('ERROR! Failed to add the subjec. Please check the error logs!'),
       ];
+      unset($_SESSION['sedm']['subject']);
     }
     $command = new OpenDialogCommand('#success-adding-subject', $this->t('Successful'), $content, ['width' => '50%']);
     $response->addCommand($command);
@@ -202,8 +174,8 @@ class VerifySubjectModalForm extends FormBase {
     $response = new AjaxResponse();
     $command = new CloseModalDialogCommand();
     $response->addCommand($command);
+    unset($_SESSION['sedm']['subject']);
     return $response;
-
   }
 
   /**
