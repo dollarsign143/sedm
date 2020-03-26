@@ -274,8 +274,9 @@ class CurriculumMenuSubjectsTab extends FormBase {
       'add-subject-form','form-container','subject-details-container','inline-container','isActive']);
 
       $CDO = new CurriculumDatabaseOperations();
-      $result = $CDO->isSubjectAvailable($subject['code'], $subject['subjCat']);
-      if($result){
+      $isSubjectAvailable = $CDO->isSubjectAvailable($subject['code'], $subject['subjCat']);
+      
+      if($isSubjectAvailable){
         
         $_SESSION['sedm']['subject'] = $subject; // final approach to be made
         $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifySubjectModalForm', $subject);
@@ -283,7 +284,7 @@ class CurriculumMenuSubjectsTab extends FormBase {
       }
       else {
 
-        $mdal_form['message'] = [
+        $modal_form['message'] = [
           '#type' => 'item',
           '#markup' => $this->t('Subject Code is already registered!'),
         ];
