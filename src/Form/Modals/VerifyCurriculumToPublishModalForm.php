@@ -33,6 +33,11 @@ class VerifyCurriculumToPublishModalForm extends FormBase {
         '#suffix' => '</div>',
     ]; 
 
+    $form['modal-form-container']['note'] = [
+      '#type' => 'item',
+      '#markup' => $this->t('NOTE: Curriculums that have been published are impossible to edit!'),
+    ];
+
     $form['modal-form-container']['question'] = [
         '#type' => 'item',
         '#markup' => $this->t('Are you sure to publish this curriculum?'),
@@ -94,7 +99,7 @@ class VerifyCurriculumToPublishModalForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-}
+  }
   
 
 }

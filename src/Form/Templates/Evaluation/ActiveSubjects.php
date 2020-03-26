@@ -57,6 +57,9 @@ class ActiveSubjects {
             '#title' => $this->t('Select College'),
             '#options' => $collegeOpt,
             '#empty_option' => 'Select College',
+            '#attributes' => [
+                'class' => ['flat-element',],
+            ],
             '#ajax' => [
                 'callback' => '::displayActiveSubjects',
                 'wrapper' => 'active-subjects-form-container-wrapper',

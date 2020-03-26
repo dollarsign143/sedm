@@ -44,7 +44,10 @@ class EvaluationForGraduation {
         $form['form-container']['student-details-container']['id-container']['id-number'] = [
             '#type' => 'textfield',
             '#title' => $this->t('ID Number'),
-            '#attributes' => array('placeholder' => array('Ex. 2015-0001')),
+            '#attributes' => [
+                'class' => ['flat-input',],
+                'placeholder' => $this->t('2015-0001'),
+            ],
         ];
 
         $form['form-container']['student-details-container']['button-container']['evaluate'] = [
@@ -55,6 +58,9 @@ class EvaluationForGraduation {
                 'callback' => '::evaluateStudent',
                 'wrapper' => 'eval-for-grad-form-container-wrapper', 
                 'event' => 'click',
+            ],
+            '#attributes' => [
+                'class' => ['flat-btn',],
             ],
         ];
 

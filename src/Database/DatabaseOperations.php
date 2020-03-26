@@ -4,41 +4,25 @@ namespace Drupal\sedm\Database;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
-use Drupal\sedm\Database\DatabaseCredentials; // custom class: database credentials
+
 
 class DatabaseOperations {
 
-    protected $database;
+    private $databaseCreds = array(
+        'database' => 'test_drupal_data',
+        'username' => 'testserver', // assuming this is necessary
+        'password' => 'testserver', // assuming this is necessary
+        'host' => 'localhost', // assumes localhost
+        'port' => '3306', // default port
+        'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql', // default namespace
+        'driver' => 'mysql', // replace with your database driver
+        // 'pdo' => array(PDO::ATTR_TIMEOUT => 2.0, PDO::MYSQL_ATTR_COMPRESS => 1), // default pdo settings
+    );
 
     public function __construct(){
 
-        $dbcreds = new DatabaseCredentials();
+        Database::addConnectionInfo('test_drupal_data', 'default', $this->databaseCreds);
 
-        Database::addConnectionInfo('test_drupal_data', 'default', $dbcreds->getCreds());
-
-    }
-
-    public function getSubjects(){
-        //setting up test_drupal_data database into active connection
-        Database::setActiveConnection('test_drupal_data');
-        // get the active connection and put into an object
-        $connection = Database::getConnection();
-
-        /**
-         * Example Query
-         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
-         *      ':created' => REQUEST_TIME - 3600,
-         *    ]);
-         */
-
-        $query = $connection->query("SELECT * FROM {subjects}");
-
-        $result = $query->fetchAll();
-
-        Database::closeConnection();
-
-        return $result;
-        
     }
 
     public function getSubjectsByCollege($collegeUID){
@@ -96,31 +80,6 @@ class DatabaseOperations {
         return $result;
     }
 
-    public function getDepartments($collegeUID){
-        //setting up test_drupal_data database into active connection
-        Database::setActiveConnection('test_drupal_data');
-        // get the active connection and put into an object
-        $connection = Database::getConnection();
-
-        /**
-         * Example Query
-        * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
-        *      ':created' => REQUEST_TIME - 3600,
-        *    ]);
-        */
-
-        $query = $connection->query("SELECT * FROM {departments} WHERE college_uid = :collegeUID", 
-        [
-            ':collegeUID' => $collegeUID,
-        ]);
-
-        $result = $query->fetchAll();
-
-        Database::closeConnection();
-
-        return $result;
-    }
-
     public function getProgramsByDepart($departmentUID){
 
         //setting up test_drupal_data database into active connection
@@ -160,9 +119,8 @@ class DatabaseOperations {
         *    ]);
         */
 
-        $query = $connection->query("SELECT * FROM {programs, departments, colleges} WHERE 
-        departments.college_uid = colleges.college_uid AND programs.department_uid = departments.department_uid
-        AND colleges.college_uid = :collegeUID", 
+        $query = $connection->query("SELECT * FROM {programs} 
+        WHERE college_uid = :collegeUID", 
         [
             ':collegeUID' => $collegeUID,
         ]);
@@ -174,60 +132,81 @@ class DatabaseOperations {
         return $result;
     }
 
-    public function addNewSubject($subject){
+    /**
+     * @public
+     * @function getSubjectCategories : returns all the registered subject categories
+     */
+    public function getSubjectCategories(){
+
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
-        $transaction = $connection->startTransaction();
+        $query = $connection->query("SELECT * FROM {subjects_category}");
 
-        /**
-         * Example Query
-        * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
-        *      ':created' => REQUEST_TIME - 3600,
-        *    ]);
-        */
+        $result = $query->fetchAll();
 
-        // subject_uid	int(11) Auto Increment	
-        // subject_code	varchar(40) NULL	
-        // subject_desc	varchar(255) NULL	
-        // subject_lecture	int(11) NULL	
-        // subject_lab	int(11) NULL	
-        // subject_units	int(11) NULL	
-        // subject_lecHrs	int(11) NULL	
-        // subject_labHrs	int(11) NULL	
-        // subject_isElective	varchar(40) NULL	
-        // subject_isActive	varchar(40) NULL	
-        // department_uid	int(11) NULL
+        Database::closeConnection();
 
-        try {
-
-            $result = $connection->insert('subjects')
-            ->fields([
-                'subject_uid' => NULL,
-                'subject_code' => $subject['code'],
-                'subject_desc' => $subject['description'],
-                'subject_lecture' => $subject['lectUnits'],
-                'subject_lab' => $subject['labUnits'],
-                'subject_units' => $subject['units'],
-                'subject_lecHrs' => $subject['lecHours'],
-                'subject_labHrs' => $subject['labHours'],
-                'subject_isElective' => $subject['isElective'],
-                'subject_isActive' => $subject['isActive'],
-                'department_uid' => $subject['departmentUID'],
-            ])
-            ->execute();
+        return $result;
     
-            return true;
+    }
 
-        } catch (Exception $e) {
-            \Drupal::logger('type')->error($e->getMessage());
-            return false;
+    public function getSubjectByCategory($subj_cat){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query("SELECT * FROM {subjects}
+        WHERE subjCat_uid = :subj_cat", 
+        [
+            ':subj_cat' => $subj_cat,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+
+    }
+
+    public function getSubjectByCode($subj_code, $subj_cat = NULL){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        if($subj_cat == NULL){
+            $query = $connection->query("SELECT * FROM {subjects} WHERE subject_code = :subj_code",
+            [
+                ':subj_code' => $subj_code,
+            ]);
+        }
+        else {
+            $query = $connection->query("SELECT * FROM {subjects} 
+            WHERE subject_code = :subj_code AND subjCat_uid = :subj_cat ",
+            [
+                ':subj_code' => $subj_code,
+                ':subj_cat' => $subj_cat,
+            ]);
         }
 
+        $result = $query->fetchAll();
 
+        Database::closeConnection();
 
+        return $result;
+
+    }
+
+    public function isSubjectAvailable($subj_code, $subj_cat){
+
+        $result = $this->getSubjectByCode($subj_code, $subj_cat);
+        return $result ? NULL : true;
+        
     }
 
 

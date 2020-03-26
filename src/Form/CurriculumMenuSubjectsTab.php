@@ -15,7 +15,7 @@ use Drupal\Core\Database\Database;
 /**
  * module classes
  */
-use Drupal\sedm\Database\DatabaseOperations; // class for database common operations
+use Drupal\sedm\Database\CurriculumDatabaseOperations; // class for database common operations
 // class for curriculum subjects tab adding new subject part
 use Drupal\sedm\Form\Templates\Curriculum\SubjectsTab\AddNewSubjectForm; 
 
@@ -108,13 +108,13 @@ class CurriculumMenuSubjectsTab extends FormBase {
       ];
 
       /**
-       * @Variable $dbOperations = object to hold DatabaseOperations class
+       * @Variable $CDO = object to hold CurriculumDatabaseOperations class
        * @Variable $colleges = object to hold the result of the query
        * @Variable array $collegeOpt : holds the custom layout of every college
        *      for select render element
        */
-      $dbOperations = new DatabaseOperations(); // instantiate DatabaseOperations Class
-      $colleges = $dbOperations->getColleges(); // get colleges
+      $CDO = new CurriculumDatabaseOperations(); // instantiate DatabaseOperations Class
+      $colleges = $CDO->getColleges(); // get colleges
       $collegeOpt = array();
 
       foreach ($colleges as $college) {
@@ -133,11 +133,29 @@ class CurriculumMenuSubjectsTab extends FormBase {
         '#title' => $this->t('College'),
         '#options' => $collegeOpt,
         '#required' => TRUE,
-        '#attributes' => array('class' => array('flat-input')),
-        '#ajax' => [
-          'callback' => '::buildDepartment',
-          'wrapper' => 'subj-details-select-container-wrapper',
+        '#attributes' => [
+          'class' => ['flat-input',],
         ],
+        '#weight' => 1,
+      ];
+
+      $subj_categories = $CDO->getSubjectCategories();
+      $subj_cat_opt = array();
+
+      foreach ($subj_categories as $subj_category){
+        $subj_cat_opt[$subj_category->subjCat_uid] = $subj_category->subjCat_name;
+      }
+
+      $form['add-subject']['add-subject-container']['add-subject-form']
+      ['form-container']['subject-details-container']['select-container']['subj_category'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Subject Category'),
+        '#options' => $subj_cat_opt,
+        '#required' => TRUE,
+        '#attributes' => [
+          'class' => ['flat-input',],
+        ],
+        '#weight' => 2,
       ];
 
     /**
@@ -148,7 +166,6 @@ class CurriculumMenuSubjectsTab extends FormBase {
      * ::subj-lecture-hrs
      * ::subj-lab-hrs
      */
-
       $form['add-subject']['add-subject-container']['add-subject-form']
       ['form-container']['subject-details-container']['inline-container'] = [
           '#type' => 'container',
@@ -167,68 +184,20 @@ class CurriculumMenuSubjectsTab extends FormBase {
           'placeholder' => 'Eng1',
           'class' => ['flat-input', ],
         ],
+        '#weight' => 3,
       ];
 
       $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['inline-container']['subj-units'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Subject Units'),
+      ['form-container']['subject-details-container']['inline-container']['subj-description'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Subject Description'),
+        '#maxlength' => 100,
         '#required' => TRUE,
         '#attributes' => [
-          'placeholder' => 'Ex. 3',
-          'class' => ['flat-input', ],
+            'class' => ['flat-input',],
+            'placeholder' => 'Subject Description',
         ],
-      ];
-
-      $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['inline-container']['subj-lecture-units'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Lecture Units'),
-        '#required' => TRUE,
-        '#attributes' => [
-          'placeholder' => 'Ex. 3',
-          'class' => ['flat-input', ],
-        ],
-      ];
-
-      $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['inline-container']['subj-lab-units'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Laboratory Units'),
-        '#required' => TRUE,
-        '#attributes' => [
-          'placeholder' => 'Ex. 3',
-          'class' => ['flat-input', ],
-        ],
-      ];
-
-      $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['inline-container']['subj-lecture-hrs'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Lecture Hours'),
-        '#required' => TRUE,
-        '#attributes' => [
-          'placeholder' => 'Ex. 3',
-          'class' => ['flat-input', ],
-        ],
-      ];
-
-      $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['inline-container']['subj-lab-hrs'] = [
-        '#type' => 'number',
-        '#title' => $this->t('Laboratory Hours'),
-        '#required' => TRUE,
-        '#attributes' => [
-          'placeholder' => 'Ex. 3',
-          'class' => ['flat-input', ],
-        ],
-      ];
-
-      $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['inline-container']['isElective'] = [
-        '#type' => 'checkbox',
-        '#title' => 'Set as Elective',
-        '#return_value' => 'elective',
+        '#weight' => 4,
       ];
 
       $form['add-subject']['add-subject-container']['add-subject-form']
@@ -236,21 +205,8 @@ class CurriculumMenuSubjectsTab extends FormBase {
         '#type' => 'checkbox',
         '#title' => 'Set as Active',
         '#return_value' => 'active',
+        '#weight' => 5,
       ];
-
-      $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['subj-description'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Subject Description'),
-        '#size' => 60,
-        '#maxlength' => 100,
-        '#required' => TRUE,
-        '#attributes' => [
-            'class' => ['flat-input',],
-            'placeholder' => 'Subject Description',
-        ],
-      ];
-
 
       // Group submit handlers in an actions element with a key of "actions" so
       // that it gets styled correctly, and so that other modules may add actions
@@ -284,46 +240,6 @@ class CurriculumMenuSubjectsTab extends FormBase {
       return $form;
   }
 
-  public function buildDepartment(array &$form, FormStateInterface $form_state){
-
-    // get the college select value
-    $college = $form_state->getValue(['add-subject','add-subject-container',
-    'add-subject-form','form-container','subject-details-container','select-container','college']);
-
-    // instatiate DatabaseOperations Class
-    $dbOperations = new DatabaseOperations();
-
-    if(!empty($college)){
-
-      // get departments
-      $departments = $dbOperations->getDepartments($college);
-      $departmentOpt = array();
-      // $departmentOpt['none'] = 'NONE';
-  
-      foreach ($departments as $department) {
-  
-        $departmentOpt[$department->department_uid] = $department->department_abbrev.' - '.$department->department_name;
-  
-      }
-
-      $form['add-subject']['add-subject-container']['add-subject-form']
-      ['form-container']['subject-details-container']['select-container']['department'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Department'),
-        '#options' => $departmentOpt,
-        '#required' => TRUE,
-        '#attributes' => [
-          'class' => ['flat-input',],
-        ],
-      ];
-
-    }
-
-    return $form['add-subject']['add-subject-container']['add-subject-form']
-    ['form-container']['subject-details-container']['select-container'];
-
-  }
-
 
   public function verifySubject(array &$form, FormStateInterface $form_state){
 
@@ -342,39 +258,37 @@ class CurriculumMenuSubjectsTab extends FormBase {
     }
     else {
 
+      $subject['collegeUID'] = $form_state->getValue(['add-subject','add-subject-container',
+      'add-subject-form','form-container','subject-details-container','select-container','college']);
+
+      $subject['subjCat'] = $form_state->getValue(['add-subject','add-subject-container',
+      'add-subject-form','form-container','subject-details-container','select-container','subj_category']);
+
       $subject['code'] = $form_state->getValue(['add-subject','add-subject-container',
       'add-subject-form','form-container','subject-details-container','inline-container','subj-code']);
 
-      $subject['units'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','inline-container','subj-units']);
-
-      $subject['lectUnits'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','inline-container','subj-lecture-units']);
-
-      $subject['labUnits'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','inline-container','subj-lab-units']);
-
-      $subject['lecHours'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','inline-container','subj-lecture-hrs']);
-
-      $subject['labHours'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','inline-container','subj-lab-hrs']);
-
       $subject['description'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','subj-description']);
-
-      $subject['isElective'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','inline-container','isElective']);
+      'add-subject-form','form-container','subject-details-container','inline-container','subj-description']);
 
       $subject['isActive'] = $form_state->getValue(['add-subject','add-subject-container',
       'add-subject-form','form-container','subject-details-container','inline-container','isActive']);
 
-      $subject['departmentUID'] = $form_state->getValue(['add-subject','add-subject-container',
-      'add-subject-form','form-container','subject-details-container','select-container','department']);
+      $CDO = new CurriculumDatabaseOperations();
+      $result = $CDO->isSubjectAvailable($subject['code'], $subject['subjCat']);
+      if($result){
+        
+        $_SESSION['sedm']['subject'] = $subject; // final approach to be made
+        $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifySubjectModalForm', $subject);
+        
+      }
+      else {
 
-      $_SESSION['sedm']['subject'] = $subject; // final approach to be made f*ck
+        $mdal_form['message'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Subject Code is already registered!'),
+        ];
 
-      $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifySubjectModalForm', $subject);
+      }
 
       $command = new OpenModalDialogCommand($this->t('Add new Subject'), $modal_form, ['width' => '50%']);
 
@@ -383,11 +297,11 @@ class CurriculumMenuSubjectsTab extends FormBase {
       return $response;
 
 
-    } // end of else 
+    } // end of else condition
 
   } // END OF verifySubject FUNCTION
 
-  public function cancelAddingSubject(array $form, FormStateInterface $form_state){
+  public function cancelAddingSubject(array &$form, FormStateInterface $form_state){
 
     $response = new AjaxResponse();
 
@@ -396,9 +310,9 @@ class CurriculumMenuSubjectsTab extends FormBase {
     $response->addCommand($command);
 
     return $response; 
-}
+  }
 
-    /**
+  /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
