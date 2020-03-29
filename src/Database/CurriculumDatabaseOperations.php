@@ -210,7 +210,36 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                         $subj_lecHours = $curri_subj[$i]['number-container']['lect_hours'];
                         $subj_prerequi1 = $curri_subj[$i]['subj_prerequi_1'];
                         $subj_prerequi2 = $curri_subj[$i]['subj_prerequi_2'];
-                        var_dump($subj_description);
+                        
+                        // curriculum_subjects attributes:
+                        // curricSubj_uid	int(11) Auto Increment	
+                        // curriculum_uid	int(11) NULL	
+                        // subject_uid	int(11) NULL	
+                        // curricSubj_prerequisite1	varchar(40) NULL	
+                        // curricSubj_prerequisite2	varchar(40) NULL	
+                        // curricSubj_labUnits	int(11) NULL	
+                        // curricSubj_lecUnits	int(11) NULL	
+                        // curricSubj_labHours	int(11) NULL	
+                        // curricSubj_lecHours	int(11) NULL	
+                        // curricSubj_year	varchar(40) NULL	
+                        // curricSubj_sem	varchar(40) NULL
+
+                        $insertedSubjUID = $connection->insert('curriculum_subjects')
+                        ->fields([
+                            'curricSubj_uid' => NULL,
+                            'curriculum_uid' => $curri_uid,
+                            'subject_uid' => $subj_code,
+                            'curricSubj_prerequisite1' => $subj_prerequi1,
+                            'curricSubj_prerequisite2' => $subj_prerequi2,
+                            'curricSubj_labUnits' => $subj_labUnits,
+                            'curricSubj_lecUnits' => $subj_lecUnits,
+                            'curricSubj_labHours' => $subj_labHours,
+                            'curricSubj_lecHours' => $subj_lecHours,
+                            'curricSubj_year' => $year,
+                            'curricSubj_sem' => $sem,
+                        ])
+                        ->execute();
+
                     }
             
                 }    
@@ -225,6 +254,25 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                 $elec_subj_code = $elect_subjs[$i]['subj_code'];
                 $elec_subj_prerequi1 = $elect_subjs[$i]['subj_prerequi_1'];
                 $elec_subj_prerequi2 = $elect_subjs[$i]['subj_prerequi_2'];
+
+                // curriculum_electives attributes:
+                // curricElect_uid	int(11) Auto Increment	
+                // curriculum_uid	int(11) NULL	
+                // electiveSubj_uid	int(11) NULL	
+                // electiveSubj_prerequisite1	varchar(40) NULL	
+                // electiveSubj_prerequisite2	varchar(40) NULL
+
+
+                $insertedElectiveSubjUID = $connection->insert('curriculum_subjects')
+                ->fields([
+                    'curricElect_uid' => NULL,
+                    'curricElect_uid' => $curri_uid,
+                    'electiveSubj_uid' => $elec_subj_code,
+                    'electiveSubj_prerequisite1' => $elec_subj_prerequi1,
+                    'electiveSubj_prerequisite2' => $elec_subj_prerequi2,
+                ])
+                ->execute();
+
             }
 
             return true;
