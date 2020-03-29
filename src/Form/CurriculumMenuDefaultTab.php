@@ -293,7 +293,7 @@ class CurriculumMenuDefaultTab extends FormBase {
 
                 $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
                 ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
-                [$sem.'_subjects_container'][$subj_field]['subj_description'] = [
+                [$sem.'_subjects_container'][$subj_field]['subj_code'] = [
                     '#type' => 'select',
                     '#title' => $this->t('Subject'),
                     '#options' => $subj_opt,
@@ -461,7 +461,7 @@ class CurriculumMenuDefaultTab extends FormBase {
 
         $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
         ['form-container']['curriculum']['subjects-container']
-        ['elective']['subjects-elective-container'][$electField]['subj_description'] = [
+        ['elective']['subjects-elective-container'][$electField]['subj_code'] = [
             '#type' => 'select',
             '#title' => $this->t('Subject'),
             '#options' => $subj_opt,
