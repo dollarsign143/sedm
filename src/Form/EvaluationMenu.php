@@ -29,17 +29,17 @@ class EvaluationMenu extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    $form['#tree'] = TRUE;
-    $form['evaluation_menu'] = array(
-        '#type' => 'vertical_tabs',
-        '#default_tab' => 'edit-enrollment-eval',
-      );
+      $form['#tree'] = TRUE;
+      $form['evaluation_menu'] = [
+          '#type' => 'vertical_tabs',
+          '#default_tab' => 'edit-enrollment-eval',
+      ];
 
-      $form['enrollment_eval'] = array(
+      $form['enrollment_eval'] = [
         '#type' => 'details',
         '#title' => $this->t('Enrollment Evaluation'),
         '#group' => 'evaluation_menu',
-      );
+      ];
 
       $form['enrollment_eval']['enrollment-eval-container'] = [
         '#type' => 'container',
@@ -67,11 +67,11 @@ class EvaluationMenu extends FormBase {
       $form['active_subjects']['active-subjects-container']['active-subjects-form'] = $activeSubjectsForm;
 
 
-      $form['eval_for_graduation'] = array(
+      $form['eval_for_graduation'] = [
         '#type' => 'details',
         '#title' => $this->t('Evaluation for Graduation'),
         '#group' => 'evaluation_menu',
-      );
+      ];
 
       $form['eval_for_graduation']['eval-for-graduation-container'] = [
         '#type' => 'container',
@@ -116,30 +116,6 @@ class EvaluationMenu extends FormBase {
 
     return $form['enrollment_eval']['enrollment-eval-container']
     ['enrollment-eval-form']['form-container'];
-
-  }
-
-  /**
-   * @function buildDepartment : this will append the department selection
-   * for Active Subjects Tab
-   */
-  public function displayActiveSubjects(array &$form, FormStateInterface $form_state){
-
-      // get the value of selected college
-      $college = $form_state->getValue([
-        'active_subjects', 'active-subjects-container', 
-        'active-subjects-form','form-container','subject-details-container',
-        'college-container','college-select',
-      ]);
-
-      $activeSubjects = new ActiveSubjects();
-
-      $form['active_subjects']['active-subjects-container']
-      ['active-subjects-form']['form-container']['subject-details-container']
-      ['subjects-table-container'] = $activeSubjects->getActiveSubjectsTemplForm($college);
-
-      return $form['active_subjects']['active-subjects-container']
-      ['active-subjects-form']['form-container'];
 
   }
 

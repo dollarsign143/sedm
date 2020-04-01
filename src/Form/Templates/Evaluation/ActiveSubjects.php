@@ -27,6 +27,7 @@ class ActiveSubjects extends FormBase {
      */
     public function buildForm(array $form, FormStateInterface $form_state) {
 
+        $form['#tree'] = TRUE;
         $form['form-container'] = [
             '#type' => 'container',
             '#prefix' => '<div id="active-subjects-form-container-wrapper">',
@@ -88,26 +89,37 @@ class ActiveSubjects extends FormBase {
 
     }
 
-    public function getActiveSubjectsTemplForm($college){
+    public function displayActiveSubjects(array &$form, FormStateInterface $form_state){
 
-        // instatiate DatabaseOperations Class
-        $dbOperations = new DatabaseOperations();
-        
+        // get the value of selected college
+        // $college = $form_state->getValue([
+        //   'active_subjects', 'active-subjects-container', 
+        //   'active-subjects-form','form-container','subject-details-container',
+        //   'college-container','college-select',
+        // ]);
+
+        $college = $form_state->getValue([
+            'form-container','subject-details-container',
+            'college-container','college-select',
+          ]);
+
         if(!empty($college)){
 
-
-            $form['subjects-table'] = [
+            $form['form-container']['subject-details-container']
+            ['subjects-table-container']['subjects-table'] = [
                 '#type' => 'details',
                 '#title' => $this->t('Active Subjects'),
                 '#open' => TRUE,
             ];
         
-            $form['subjects-table']['description'] = [
+            $form['form-container']['subject-details-container']
+            ['subjects-table-container']['subjects-table']['description'] = [
                 '#type' => 'item',
                 '#markup' => $this->t('The subjects listed below are active an can be enrolled'),
             ];
         
-            $form['subjects-table']['table'] = [
+            $form['form-container']['subject-details-container']
+            ['subjects-table-container']['subjects-table']['table'] = [
                 '#type' => 'markup',
                 '#markup' => $this->t('
                 <div>
@@ -125,60 +137,9 @@ class ActiveSubjects extends FormBase {
                     </table>
                 </div>'),
             ];
-
         }
 
-        return $form;
-
-    }
-
-    public function displayActiveSubjects(array &$form, FormStateInterface $form_state){
-
-        // get the value of selected college
-        $college = $form_state->getValue([
-          'active_subjects', 'active-subjects-container', 
-          'active-subjects-form','form-container','subject-details-container',
-          'college-container','college-select',
-        ]);
-
-        $form['active_subjects']['active-subjects-container']
-        ['active-subjects-form']['form-container']['subject-details-container']
-        ['subjects-table-container']['subjects-table'] = [
-            '#type' => 'details',
-            '#title' => $this->t('Active Subjects'),
-            '#open' => TRUE,
-        ];
-    
-        $form['active_subjects']['active-subjects-container']
-        ['active-subjects-form']['form-container']['subject-details-container']
-        ['subjects-table-container']['subjects-table']['description'] = [
-            '#type' => 'item',
-            '#markup' => $this->t('The subjects listed below are active an can be enrolled'),
-        ];
-    
-        $form['active_subjects']['active-subjects-container']
-        ['active-subjects-form']['form-container']['subject-details-container']
-        ['subjects-table-container']['subjects-table']['table'] = [
-            '#type' => 'markup',
-            '#markup' => $this->t('
-            <div>
-                <table>
-                <thead>
-                    <tr>
-                    <th>Subject Name</th>
-                    <th>Units</th>
-                    <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody class="subjectsAvailableBody">
-    
-                </tbody>
-                </table>
-            </div>'),
-        ];
-
-        return $form['active_subjects']['active-subjects-container']
-        ['active-subjects-form']['form-container'];
+        return $form['form-container'];
 
     }
     
@@ -186,27 +147,6 @@ class ActiveSubjects extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-
-    $tabCaller = $data = $form_state->getTriggeringElement()['#tabCaller'];
-
-    if($tabCaller == 'enrollmentEval'){
-
-      $idNumber = $form_state->getValue(['enrollment_eval','enrollment-eval-container',
-      'enrollment-eval-form','form-container','student','details-container','idNumber']);
-      if(empty($idNumber)){
-        $form_state->setError($form, $this->t('ID number is empty!'));
-      }
-
-    }
-    elseif($tabCaller == 'evalForGrad'){
-      $idNumber = $form_state->getValue(['eval_for_graduation','eval-for-graduation-container',
-      'eval-for-grad-form','form-container','student-details-container','id-container','id-number']);
-
-      if(empty($idNumber)){
-        $form_state->setError($form, $this->t('ID number is empty!'));
-      }
-    }
-
   }
 
     /**
