@@ -223,7 +223,11 @@ class DatabaseOperations {
             ':curri_num' => $curri_num,
         ]);
 
-        $result = $query->fetchField();
+        $tempRes = $query->fetchAll();
+
+        foreach($tempRes as $res){
+            $result = $res;
+        }
 
         Database::closeConnection();
 

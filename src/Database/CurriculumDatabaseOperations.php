@@ -111,7 +111,7 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
     /**
      * 
      */
-    public function insertNewCurriculum($curri_info, $curr_subjs, $isLock = false){
+    public function insertNewCurriculum($curri_info, $curr_subjs, $isLock){
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');
         // get the active connection and put into an object
@@ -127,7 +127,7 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
         // curriculum_semCreated	varchar(40) NULL	
         // program_uid	int(11) NULL
         try {
-            $result = $connection->insert('curriculums')
+            $resultCurriUID = $connection->insert('curriculums')
             ->fields([
                 'curriculum_uid' => NULL,
                 'curriculum_no' => $curri_info['curr_num'],
@@ -136,32 +136,26 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                 'curriculum_schoolYearCreated' => $curri_info['curr_schoolYear'],
                 'program_uid' => $curri_info['curr_program'],
             ])
-            ->execute();
+            ->execute(); 
             
-            $isCurriSubjectsInserted = $this
-            ->insertCurriculumSubjects($curri_info['curr_program'], $curri_info['curr_num'], $curr_subjs);
-            
-            if($isCurriSubjectsInserted){
-                return true;
-            }
-            else {
-                $transaction->rollBack();
-                return false;
-            }
-            
+            return $resultCurriUID;
 
         } catch (DatabaseExceptionWrapper $e) {
             \Drupal::logger('type')->error($e->getMessage());
             $transaction->rollBack();
             return false;
         }
-
-        $connection->commit();
         
     }
 
-    public function insertCurriculumSubjects($programUID, $curri_num, $curr_subjs){
+    public function insertCurriculumSubjects($curri_uid, $curr_subjs){
 
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+        $transaction = $connection->startTransaction();
+        
         /**
          * @var $years : array that holds all possible years in a curriculum
          * @var $sems : array that holds all possible semesters in a curriculum
@@ -176,21 +170,8 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
             'summer-sem',
         ];
 
-        /**
-         * @var $curri_uid : variable to hold the result of getCurriculumInfo method
-         * @method getCurriculumInfo($programUID, $curri_num) : returns the id of the curriculum
-         * @param $programUID : program unique id of a college program
-         * @param $curri_num : curriculum number
-         * method in DatabaseOperations parent class
-         */
-        $curri_uid = $this->getCurriculumInfo($programUID, $curri_num);
-
-        // check if the curriculum is existing
-        // if returns NULL this method will return false
-        if($curri_uid == NULL){
-            return false;
-        }
-        else {
+        try {
+            
             // Parsing the data structure of created curriculum
             // iterate through years array
             foreach($years as $year){
@@ -224,21 +205,23 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                         // curricSubj_year	varchar(40) NULL	
                         // curricSubj_sem	varchar(40) NULL
 
-                        $insertedSubjUID = $connection->insert('curriculum_subjects')
-                        ->fields([
-                            'curricSubj_uid' => NULL,
-                            'curriculum_uid' => $curri_uid,
-                            'subject_uid' => $subj_code,
-                            'curricSubj_prerequisite1' => $subj_prerequi1,
-                            'curricSubj_prerequisite2' => $subj_prerequi2,
-                            'curricSubj_labUnits' => $subj_labUnits,
-                            'curricSubj_lecUnits' => $subj_lecUnits,
-                            'curricSubj_labHours' => $subj_labHours,
-                            'curricSubj_lecHours' => $subj_lecHours,
-                            'curricSubj_year' => $year,
-                            'curricSubj_sem' => $sem,
-                        ])
-                        ->execute();
+                        if($subj_code != 'none'){
+                            $insertedSubjUID = $connection->insert('curriculum_subjects')
+                            ->fields([
+                                'curricSubj_uid' => NULL,
+                                'curriculum_uid' => $curri_uid,
+                                'subject_uid' => $subj_code,
+                                'curricSubj_prerequisite1' => $subj_prerequi1,
+                                'curricSubj_prerequisite2' => $subj_prerequi2,
+                                'curricSubj_labUnits' => $subj_labUnits,
+                                'curricSubj_lecUnits' => $subj_lecUnits,
+                                'curricSubj_labHours' => $subj_labHours,
+                                'curricSubj_lecHours' => $subj_lecHours,
+                                'curricSubj_year' => $year,
+                                'curricSubj_sem' => $sem,
+                            ])
+                            ->execute();
+                        }
 
                     }
             
@@ -250,7 +233,7 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
             $elect_subjs = $curr_subjs['electives'];
 
             // loop through the array and save the elective subject infos in database
-            for($i = 1; $i <= count($elect_subjs); $i++){
+            for($i = 1; $i < count($elect_subjs); $i++){
                 $elec_subj_code = $elect_subjs[$i]['subj_code'];
                 $elec_subj_prerequi1 = $elect_subjs[$i]['subj_prerequi_1'];
                 $elec_subj_prerequi2 = $elect_subjs[$i]['subj_prerequi_2'];
@@ -262,21 +245,25 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                 // electiveSubj_prerequisite1	varchar(40) NULL	
                 // electiveSubj_prerequisite2	varchar(40) NULL
 
-
-                $insertedElectiveSubjUID = $connection->insert('curriculum_subjects')
-                ->fields([
-                    'curricElect_uid' => NULL,
-                    'curricElect_uid' => $curri_uid,
-                    'electiveSubj_uid' => $elec_subj_code,
-                    'electiveSubj_prerequisite1' => $elec_subj_prerequi1,
-                    'electiveSubj_prerequisite2' => $elec_subj_prerequi2,
-                ])
-                ->execute();
+                if($elec_subj_code != 'none'){
+                    $insertedElectiveSubjUID = $connection->insert('curriculum_electives')
+                    ->fields([
+                        'curricElect_uid' => NULL,
+                        'curriculum_uid' => $curri_uid,
+                        'electiveSubj_uid' => $elec_subj_code,
+                        'electiveSubj_prerequisite1' => $elec_subj_prerequi1,
+                        'electiveSubj_prerequisite2' => $elec_subj_prerequi2,
+                    ])
+                    ->execute();
+                }
 
             }
 
             return true;
-
+        } catch (DatabaseExceptionWrapper $e) {
+            \Drupal::logger('type')->error($e->getMessage());
+            $transaction->rollBack();
+            return false;
         }
 
     }

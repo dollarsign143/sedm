@@ -79,22 +79,36 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
 
     $response = new AjaxResponse();
     $CDO = new CurriculumDatabaseOperations();
+    $modal_form = array();
     
     $curr_infos = $_SESSION['sedm']['curr_infos']; 
     $curr_subjs = $_SESSION['sedm']['curr_subjs'];
-    $isCurriculumSaved = $CDO->insertNewCurriculum($curr_infos, $curr_subjs);
+    $isCurriculumSaved = $CDO->insertNewCurriculum($curr_infos, $curr_subjs, 'NO');
 
-    if($isCurriculumSaved) {
-      $modal_form['message'] = [
-        '#type' => 'item',
-        '#markup' => $this->t('Curriculum has been saved successfully!'),
-      ];
-    }
-    else {
+    // todo: separate inserting subjects
+    if($isCurriculumSaved === false){
       $modal_form['message'] = [
         '#type' => 'item',
         '#markup' => $this->t('Failed to save curriculum! Please try again!')
       ];
+    }
+    else {
+      $curri_uid = $isCurriculumSaved;
+
+      $isSubjectsInserted = $CDO->insertCurriculumSubjects($curri_uid, $curr_subjs);
+      if(isSubjectsInserted){
+        $modal_form['message'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Curriculum has been saved successfully!'),
+        ];
+      }
+      else{
+        $modal_form['message'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Failed to save curriculum! Please try again!')
+        ];
+      }
+
     }
 
     $command = new OpenModalDialogCommand($this->t('Sample'), $modal_form, ['width' => '50%']);

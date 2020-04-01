@@ -39,6 +39,14 @@ sedm.menu.curriculum.default.tab.verify.curriculum.to.publish.modal.form:
   requirements:
     _permission: 'access content'
 
+sedm.menu.curriculum.default.tab.edit.curriculum.form:
+  path: '/sedm/menu/curriculum/tab/default/edit/curriculum'
+  defaults:
+    _form: '\Drupal\sedm\Form\Hidden\EditCurriculumForm' 
+    _title: 'Edit Curriculum'
+  requirements:
+    _permission: 'access content'
+
 # ++++++++++++++++++ END OF CURRICULUM DEFAULT TAB ROUTES ++++++++++++++++
 
 sedm.menu.curriculum.subjects.tab:
