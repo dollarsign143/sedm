@@ -12,7 +12,7 @@ class DatabaseOperations {
         'database' => 'test_drupal_data',
         'username' => 'testserver', // assuming this is necessary
         'password' => 'testserver', // assuming this is necessary
-        'host' => 'localhost', // assumes localhost
+        'host' => 'mariadb', // assumes localhost
         'port' => '3306', // default port
         'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql', // default namespace
         'driver' => 'mysql', // replace with your database driver
@@ -223,7 +223,11 @@ class DatabaseOperations {
             ':curri_num' => $curri_num,
         ]);
 
-        $result = $query->fetchAll();
+        $tempRes = $query->fetchAll();
+
+        foreach($tempRes as $res){
+            $result = $res;
+        }
 
         Database::closeConnection();
 

@@ -11,6 +11,8 @@ use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 
+use Drupal\sedm\Database\CurriculumDatabaseOperations;
+
 class VerifyCurriculumToSaveModalForm extends FormBase {
 
   /**
@@ -76,14 +78,38 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
   public function proceedSavingCurriculum(array &$form, FormStateInterface $form_state){
 
     $response = new AjaxResponse();
+    $CDO = new CurriculumDatabaseOperations();
+    $modal_form = array();
     
     $curr_infos = $_SESSION['sedm']['curr_infos']; 
     $curr_subjs = $_SESSION['sedm']['curr_subjs'];
-    
-    $modal_form['message'] = [
-      '#type' => 'item',
-      '#markup' => $this->t('Curriculum has been saved successfully!'),
-    ];
+    $isCurriculumSaved = $CDO->insertNewCurriculum($curr_infos, $curr_subjs, 'NO');
+
+    // todo: separate inserting subjects
+    if($isCurriculumSaved === false){
+      $modal_form['message'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('Failed to save curriculum! Please try again!')
+      ];
+    }
+    else {
+      $curri_uid = $isCurriculumSaved;
+
+      $isSubjectsInserted = $CDO->insertCurriculumSubjects($curri_uid, $curr_subjs);
+      if(isSubjectsInserted){
+        $modal_form['message'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Curriculum has been saved successfully!'),
+        ];
+      }
+      else{
+        $modal_form['message'] = [
+          '#type' => 'item',
+          '#markup' => $this->t('Failed to save curriculum! Please try again!')
+        ];
+      }
+
+    }
 
     $command = new OpenModalDialogCommand($this->t('Sample'), $modal_form, ['width' => '50%']);
     $response->addCommand($command);
