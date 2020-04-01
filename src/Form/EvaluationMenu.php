@@ -47,7 +47,7 @@ class EvaluationMenu extends FormBase {
         '#suffix' => '</div>',
       ];
 
-      // $enrollmentEval = new EnrollmentEvaluation();
+      $enrollmentEval = new EnrollmentEvaluation();
       $form['enrollment_eval']['enrollment-eval-container']['enrollment-eval-form'] = $enrollmentEval->getTemplForm();
 
       $form['active_subjects'] = array(
@@ -62,8 +62,9 @@ class EvaluationMenu extends FormBase {
         '#suffix' => '</div>',
       ];
 
-      $activeSubjects = new ActiveSubjects();
-      $form['active_subjects']['active-subjects-container']['active-subjects-form'] = $activeSubjects->getTemplForm();
+      // $activeSubjects = new ActiveSubjects();
+      $activeSubjectsForm = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Templates\Evaluation\ActiveSubjects');
+      $form['active_subjects']['active-subjects-container']['active-subjects-form'] = $activeSubjectsForm;
 
 
       $form['eval_for_graduation'] = array(

@@ -2,18 +2,30 @@
 
 namespace Drupal\sedm\Form\Templates\Evaluation;
 
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Database;
+
 use Drupal\sedm\Database\DatabaseOperations;
 
-class ActiveSubjects {
-    use StringTranslationTrait;
+class ActiveSubjects extends FormBase {
 
     /**
-     * @Public function getTemplForm : this method will return the initial form
-     * of the calling tab
-     * returns $form
+     * {@inheritdoc}
      */
-    public function getTemplForm(){
+    public function getFormId() {
+        return 'sedm_evaluation_menu_active_subjects';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function buildForm(array $form, FormStateInterface $form_state) {
 
         $form['form-container'] = [
             '#type' => 'container',
@@ -120,6 +132,38 @@ class ActiveSubjects {
 
     }
 
+    /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+
+    $tabCaller = $data = $form_state->getTriggeringElement()['#tabCaller'];
+
+    if($tabCaller == 'enrollmentEval'){
+
+      $idNumber = $form_state->getValue(['enrollment_eval','enrollment-eval-container',
+      'enrollment-eval-form','form-container','student','details-container','idNumber']);
+      if(empty($idNumber)){
+        $form_state->setError($form, $this->t('ID number is empty!'));
+      }
+
+    }
+    elseif($tabCaller == 'evalForGrad'){
+      $idNumber = $form_state->getValue(['eval_for_graduation','eval-for-graduation-container',
+      'eval-for-grad-form','form-container','student-details-container','id-container','id-number']);
+
+      if(empty($idNumber)){
+        $form_state->setError($form, $this->t('ID number is empty!'));
+      }
+    }
+
+  }
+
+    /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+  }
 
 }
 
