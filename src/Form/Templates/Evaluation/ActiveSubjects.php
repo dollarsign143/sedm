@@ -132,6 +132,56 @@ class ActiveSubjects extends FormBase {
 
     }
 
+    public function displayActiveSubjects(array &$form, FormStateInterface $form_state){
+
+        // get the value of selected college
+        $college = $form_state->getValue([
+          'active_subjects', 'active-subjects-container', 
+          'active-subjects-form','form-container','subject-details-container',
+          'college-container','college-select',
+        ]);
+
+        $form['active_subjects']['active-subjects-container']
+        ['active-subjects-form']['form-container']['subject-details-container']
+        ['subjects-table-container']['subjects-table'] = [
+            '#type' => 'details',
+            '#title' => $this->t('Active Subjects'),
+            '#open' => TRUE,
+        ];
+    
+        $form['active_subjects']['active-subjects-container']
+        ['active-subjects-form']['form-container']['subject-details-container']
+        ['subjects-table-container']['subjects-table']['description'] = [
+            '#type' => 'item',
+            '#markup' => $this->t('The subjects listed below are active an can be enrolled'),
+        ];
+    
+        $form['active_subjects']['active-subjects-container']
+        ['active-subjects-form']['form-container']['subject-details-container']
+        ['subjects-table-container']['subjects-table']['table'] = [
+            '#type' => 'markup',
+            '#markup' => $this->t('
+            <div>
+                <table>
+                <thead>
+                    <tr>
+                    <th>Subject Name</th>
+                    <th>Units</th>
+                    <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody class="subjectsAvailableBody">
+    
+                </tbody>
+                </table>
+            </div>'),
+        ];
+
+        return $form['active_subjects']['active-subjects-container']
+        ['active-subjects-form']['form-container'];
+
+    }
+    
     /**
    * {@inheritdoc}
    */
