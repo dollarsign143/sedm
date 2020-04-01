@@ -47,7 +47,7 @@ class EvaluationMenu extends FormBase {
         '#suffix' => '</div>',
       ];
 
-      $enrollmentEval = new EnrollmentEvaluation();
+      // $enrollmentEval = new EnrollmentEvaluation();
       $form['enrollment_eval']['enrollment-eval-container']['enrollment-eval-form'] = $enrollmentEval->getTemplForm();
 
       $form['active_subjects'] = array(
