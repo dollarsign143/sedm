@@ -47,8 +47,9 @@ class EvaluationMenu extends FormBase {
         '#suffix' => '</div>',
       ];
 
-      $enrollmentEval = new EnrollmentEvaluation();
-      $form['enrollment_eval']['enrollment-eval-container']['enrollment-eval-form'] = $enrollmentEval->getTemplForm();
+      // $enrollmentEval = new EnrollmentEvaluation();
+      $enrollmentEvalForm = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Templates\Evaluation\EnrollmentEvaluation');
+      $form['enrollment_eval']['enrollment-eval-container']['enrollment-eval-form'] = $enrollmentEvalForm;
 
       $form['active_subjects'] = array(
         '#type' => 'details',
@@ -79,8 +80,9 @@ class EvaluationMenu extends FormBase {
         '#suffix' => '</div>',
       ];
 
-      $evalForGrad = new EvaluationForGraduation();
-      $form['eval_for_graduation']['eval-for-graduation-container']['eval-for-grad-form'] = $evalForGrad->getTemplForm();
+      // $evalForGrad = new EvaluationForGraduation();
+      $evalForGradForm = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Templates\Evaluation\EvaluationForGraduation');
+      $form['eval_for_graduation']['eval-for-graduation-container']['eval-for-grad-form'] = $evalForGradForm;
 
       $form['#attached']['library'][] = 'sedm/evaluation.forms.styles';
       $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
@@ -88,129 +90,15 @@ class EvaluationMenu extends FormBase {
       return $form;
   }
 
-
   /**
-   * @function searchAvailableSubjects : this will fetch the query response 
-   * template
-   */
-  public function searchAvailableSubjects(array &$form, FormStateInterface $form_state){
-
-
-    if($form_state->getErrors()){
-
-      $form['enrollment_eval']['enrollment-eval-container']
-      ['enrollment-eval-form']['form-container']['student']
-      ['notice-container']['status_messages'] = [
-        '#type' => 'status_messages',
-      ];
-    }
-    // this condition will append the subjects table
-    else{
-
-      $enrollmentEval = new EnrollmentEvaluation();
-      $form['enrollment_eval']['enrollment-eval-container']
-      ['enrollment-eval-form']['form-container']
-      ['subject-table-container'] = $enrollmentEval->getSubjectSearchTemplResponse();
-
-    }
-
-    return $form['enrollment_eval']['enrollment-eval-container']
-    ['enrollment-eval-form']['form-container'];
-
-  }
-
-  public function evaluateStudent(array &$form, FormStateInterface $form_state){
-
-    // this condition will return errors to the form if there are
-    if($form_state->getErrors()){
-
-      $form['eval_for_graduation']['eval-for-graduation-container']
-      ['eval-for-grad-form']['form-container']['student-details-container']
-      ['notice-container']['status_messages'] = [
-        '#type' => 'status_messages',
-      ];
-
-    }
-    else {
-
-      $studIdNumber = $form_state->getValue(['eval_for_graduation','eval-for-graduation-container',
-      'eval-for-grad-form','form-container','student-details-container','id-container','id-number']);
-
-      $evalForGrad = new EvaluationForGraduation();
-  
-      // $form['eval_for_graduation']['eval-for-graduation-container']
-      //     ['eval-for-grad-form']['form-container']
-      //     ['eval-sheet-container'] = $evalForGrad->getStudentEvaluatedSubjects($studIdNumber);
-
-      $form['eval_for_graduation']['eval-for-graduation-container']
-      ['eval-for-grad-form']['form-container']['eval-sheet-container']['eval-sheet'] = [
-        '#type' => 'details',
-        '#title' => $this->t('Student\'s Subjects'),
-        '#open' => TRUE,
-      ];
-  
-      $form['eval_for_graduation']['eval-for-graduation-container']
-      ['eval-for-grad-form']['form-container']['eval-sheet-container']['eval-sheet']['description'] = [
-          '#type' => 'item',
-          '#markup' => $this->t('The subjects listed below are evaluated.'),
-      ];
-  
-      $form['eval_for_graduation']['eval-for-graduation-container']
-      ['eval-for-grad-form']['form-container']['eval-sheet-container']['eval-sheet']['table'] = [
-          '#type' => 'markup',
-          '#markup' => $this->t('
-          <div>
-              <table>
-              <thead>
-                  <tr>
-                  <th>Subject Name</th>
-                  <th>Units</th>
-                  <th>Remarks</th>
-                  </tr>
-              </thead>
-              <tbody class="subjectsAvailableBody">
-  
-              </tbody>
-              </table>
-          </div>'),
-      ];
-
-    }
-
-    return $form['eval_for_graduation']['eval-for-graduation-container']
-    ['eval-for-grad-form']['form-container'];
-
-  }
-
-
-    /**
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
 
-    $tabCaller = $data = $form_state->getTriggeringElement()['#tabCaller'];
-
-    if($tabCaller == 'enrollmentEval'){
-
-      $idNumber = $form_state->getValue(['enrollment_eval','enrollment-eval-container',
-      'enrollment-eval-form','form-container','student','details-container','idNumber']);
-      if(empty($idNumber)){
-        $form_state->setError($form, $this->t('ID number is empty!'));
-      }
-
-    }
-    elseif($tabCaller == 'evalForGrad'){
-      $idNumber = $form_state->getValue(['eval_for_graduation','eval-for-graduation-container',
-      'eval-for-grad-form','form-container','student-details-container','id-container','id-number']);
-
-      if(empty($idNumber)){
-        $form_state->setError($form, $this->t('ID number is empty!'));
-      }
-    }
-
   }
 
-    /**
+
+  /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {

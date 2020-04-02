@@ -2,21 +2,33 @@
 
 namespace Drupal\sedm\Form\Templates\Evaluation;
 
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Database;
+
 use Drupal\sedm\Database\DatabaseOperations;
 
 
-class EvaluationForGraduation {
-    use StringTranslationTrait;
+class EvaluationForGraduation extends FormBase {
 
-
-        /**
-     * @Public function getTemplForm : this method will return the initial form
-     * of the calling tab
-     * returns $form
+    /**
+     * {@inheritdoc}
      */
-    public function getTemplForm(){
+    public function getFormId() {
+        return 'sedm_evaluation_menu_eval_for_graduation';
+    }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function buildForm(array $form, FormStateInterface $form_state) {
+
+        $form['#tree'] = TRUE;
         $form['form-container'] = [
             '#type' => 'container',
             '#prefix' => '<div id="eval-for-grad-form-container-wrapper">',
@@ -50,10 +62,9 @@ class EvaluationForGraduation {
             ],
         ];
 
-        $form['form-container']['student-details-container']['button-container']['evaluate'] = [
+        $form['form-container']['student-details-container']['button-container']['evaluateSubjs'] = [
             '#type' => 'submit',
-            '#value' => $this->t('Evaluate'),
-            '#tabCaller' => 'evalForGrad',
+            '#value' => $this->t('Evaluate Subjects'),
             '#ajax' =>  [
                 'callback' => '::evaluateStudent',
                 'wrapper' => 'eval-for-grad-form-container-wrapper', 
@@ -74,38 +85,75 @@ class EvaluationForGraduation {
 
     }
 
-    public function getStudentEvaluatedSubjects($studID){
 
-        $form['eval-sheet'] = [
-          '#type' => 'details',
-          '#title' => $this->t('Student\'s Subjects'),
-          '#open' => TRUE,
-        ];
+    public function evaluateStudent(array &$form, FormStateInterface $form_state){
+
+        // this condition will return errors to the form if there are
+        if($form_state->getErrors()){
     
-        $form['eval-sheet']['description'] = [
-            '#type' => 'item',
-            '#markup' => $this->t('The subjects listed below are evaluated.'),
-        ];
+          $form['form-container']['student-details-container']
+          ['notice-container']['status_messages'] = [
+            '#type' => 'status_messages',
+          ];
     
-        $form['eval-sheet']['table'] = [
-            '#type' => 'markup',
-            '#markup' => $this->t('
-            <div>
-                <table>
-                <thead>
-                    <tr>
-                    <th>Subject Name</th>
-                    <th>Units</th>
-                    <th>Remarks</th>
-                    </tr>
-                </thead>
-                <tbody class="subjectsAvailableBody">
+        }
+        else {
     
-                </tbody>
-                </table>
-            </div>'),
-        ];
-        
+          $studIdNumber = $form_state->getValue(['form-container','student-details-container','id-container','id-number']);
+    
+          $form['form-container']['eval-sheet-container']['eval-sheet'] = [
+            '#type' => 'details',
+            '#title' => $this->t('Student\'s Subjects'),
+            '#open' => TRUE,
+          ];
+      
+          $form['form-container']['eval-sheet-container']['eval-sheet']['description'] = [
+              '#type' => 'item',
+              '#markup' => $this->t('The subjects listed below are evaluated.'),
+          ];
+      
+          $form['form-container']['eval-sheet-container']['eval-sheet']['table'] = [
+              '#type' => 'markup',
+              '#markup' => $this->t('
+              <div>
+                  <table>
+                  <thead>
+                      <tr>
+                      <th>Subject Name</th>
+                      <th>Units</th>
+                      <th>Remarks</th>
+                      </tr>
+                  </thead>
+                  <tbody class="subjectsAvailableBody">
+      
+                  </tbody>
+                  </table>
+              </div>'),
+          ];
+    
+        }
+    
+        return $form['form-container'];
+    
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function validateForm(array &$form, FormStateInterface $form_state) {
+
+        $idNumber = $form_state->getValue(['form-container','student-details-container','id-container','id-number']);
+
+        if(empty($idNumber)){
+            $form_state->setError($form, $this->t('ID number is empty!'));
+        }
+
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function submitForm(array &$form, FormStateInterface $form_state) {
     }
 
 
