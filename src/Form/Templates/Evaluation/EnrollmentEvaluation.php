@@ -11,7 +11,7 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 
-use Drupal\sedm\Database\DatabaseOperations;
+use Drupal\sedm\Database\EvaluationDatabaseOperations;
 
 class EnrollmentEvaluation extends FormBase {
 
@@ -41,8 +41,9 @@ class EnrollmentEvaluation extends FormBase {
         ];
 
         $form['form-container']['student'] = [
-            '#type' => 'fieldset',
-            '#title' => 'Student Info.'
+            '#type' => 'details',
+            '#title' => 'Fill out student info.',
+            '#open' => TRUE,
         ];
 
         $form['form-container']['student']['notice-container'] = [
@@ -50,7 +51,8 @@ class EnrollmentEvaluation extends FormBase {
         ];
 
         $form['form-container']['student']['details-container'] = [
-            '#type' => 'container'
+            '#type' => 'container',
+            '#weight' => 1
         ];
 
         $form['form-container']['student']['details-container']['idNumber'] = [
@@ -69,29 +71,30 @@ class EnrollmentEvaluation extends FormBase {
             ],
         ];
 
+        $years = [
+            'first-year' => 'First Year',
+            'second-year' => 'Second Year',
+            'third-year' => 'Third Year',
+            'fourth-year' => 'Fourth Year'
+        ];
         $form['form-container']['student']['details-container']['select_container']['yearLevel'] = [
             '#type' => 'select',
             '#title' => 'Year Level',
-            '#options' => [
-                '1' => 'First Year',
-                '2' => 'Second Year',
-                '3' => 'Third Year',
-                '4' => 'Fourth Year',
-                '5' => 'Fifth Year',
-            ],
+            '#options' => $years,
             '#attributes' => [
                 'class' => ['flat-element',],
             ],
         ];
 
+        $semesters = [
+            'first-sem' => 'First Semester',
+            'second-sem' => 'Second Semester',
+            'summer-sem' => 'Summer'
+        ];
         $form['form-container']['student']['details-container']['select_container']['semester'] = [
             '#type' => 'select',
             '#title' => 'Select Semester',
-            '#options' => [
-                '1' => 'First Semester',
-                '2' => 'Second Semester',
-                '3' => 'Summer',
-            ],
+            '#options' => $semesters,
             '#attributes' => [
                 'class' => ['flat-element',],
             ],
@@ -114,6 +117,7 @@ class EnrollmentEvaluation extends FormBase {
             '#type' => 'container',
             '#prefix' => '<div id="subj-table-container-wrapper">',
             '#suffix' => '</div>',
+            '#weight' => 3,
         ];
 
         return $form;
@@ -136,19 +140,69 @@ class EnrollmentEvaluation extends FormBase {
             // this condition will append the subjects table
         else{
 
+            $data['id_number'] = $form_state->getValue(['form-container','student','details-container','idNumber']);
+            $data['year_level'] = $form_state->getValue(['form-container','student','details-container','select_container','yearLevel']);
+            $data['semester'] = $form_state->getValue(['form-container','student','details-container','select_container','semester']);
+            
+            $EDO = new EvaluationDatabaseOperations();
+            $stud_info = $EDO->getStudentInfo($data['id_number']);
+
+            $form['form-container']['student-info-fieldset'] = [
+                '#type' => 'fieldset',
+                '#title' => 'Student Info.',
+                '#weight' => 2
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container'] = [
+                '#type' => 'container',
+                '#attributes' => [
+                    'class' => ['inline-container-col3',],
+                ],
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container']['last-name'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Last Name'),
+                '#value' => ucwords($stud_info[0]->studProf_lname),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container']['first-name'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('First Name'),
+                '#value' => ucwords($stud_info[0]->studProf_fname),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container']['middle-name'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Middle Name'),
+                '#value' => ucwords($stud_info[0]->studProf_mname),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
             $form['form-container']
             ['subject-table-container']['subjectsAvailable'] = [
                 '#type' => 'details',
                 '#title' => $this->t('Advisable Subjects'),
                 '#open' => TRUE,
             ];
-    
+
             $form['form-container']
             ['subject-table-container']['subjectsAvailable']['description'] = [
                 '#type' => 'item',
                 '#markup' => $this->t('The subjects listed below are advisable to enroll.'),
             ];
-    
+
             $form['form-container']
             ['subject-table-container']['subjectsAvailable']['table'] = [
                 '#type' => 'markup',
@@ -163,11 +217,12 @@ class EnrollmentEvaluation extends FormBase {
                         </tr>
                     </thead>
                     <tbody class="subjectsAvailableBody">
-    
+
                     </tbody>
                     </table>
                 </div>'),
             ];
+            
 
         }
 

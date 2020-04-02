@@ -11,7 +11,7 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 
-use Drupal\sedm\Database\DatabaseOperations;
+use Drupal\sedm\Database\EvaluationDatabaseOperations;
 
 class ActiveSubjects extends FormBase {
 
@@ -33,7 +33,6 @@ class ActiveSubjects extends FormBase {
             '#prefix' => '<div id="active-subjects-form-container-wrapper">',
             '#suffix' => '</div>',
           ];
-
         $form['form-container']['form-title'] = [
             '#type' => 'item',
             '#markup' => $this->t('<h2>Active Subjects</h2>'),
@@ -55,8 +54,8 @@ class ActiveSubjects extends FormBase {
          * @Variable array $collegeOpt : holds the custom layout of every college
          *      for select render element
          */
-        $dbOperations = new DatabaseOperations(); // instantiate DatabaseOperations Class
-        $colleges = $dbOperations->getColleges(); // get colleges
+        $EDO = new EvaluationDatabaseOperations(); // instantiate EvaluationDatabaseOperations Class
+        $colleges = $EDO->getColleges(); // get colleges
         $collegeOpt = array();
 
         foreach ($colleges as $college) {
@@ -92,11 +91,6 @@ class ActiveSubjects extends FormBase {
     public function displayActiveSubjects(array &$form, FormStateInterface $form_state){
 
         // get the value of selected college
-        // $college = $form_state->getValue([
-        //   'active_subjects', 'active-subjects-container', 
-        //   'active-subjects-form','form-container','subject-details-container',
-        //   'college-container','college-select',
-        // ]);
 
         $college = $form_state->getValue([
             'form-container','subject-details-container',
@@ -118,6 +112,34 @@ class ActiveSubjects extends FormBase {
                 '#markup' => $this->t('The subjects listed below are active an can be enrolled'),
             ];
         
+            $EDO = new EvaluationDatabaseOperations(); // instantiate EvaluationDatabaseOperations Class
+            $data = NULL;
+            $activeSubjects = $EDO->getActiveSubjects($college);
+            if(empty($activeSubjects)){
+                $data = $this->t(
+                    '<tr>
+                    <td>NONE</td>
+                    <td>NONE</td>
+                    <td>NONE</td>
+                    <td>NONE</td>
+                    <td>NONE</td>
+                    </tr>'
+                );
+            }
+            else {
+                foreach($activeSubjects as $activeSubject){
+                    $data .= $this->t(
+                        '<tr>
+                        <td>'.$activeSubject->subject_code.'</td>
+                        <td>'.$activeSubject->subject_desc .'</td>
+                        <td>'.($activeSubject->curricSubj_labUnits + $activeSubject->curricSubj_lecUnits).'</td>
+                        <td>'.($activeSubject->curricSubj_labHours + $activeSubject->curricSubj_lecHours).'</td>
+                        <td>'.$activeSubject->program_abbrev.'</td>
+                        </tr>'
+                    );
+                }
+            }
+
             $form['form-container']['subject-details-container']
             ['subjects-table-container']['subjects-table']['table'] = [
                 '#type' => 'markup',
@@ -126,13 +148,15 @@ class ActiveSubjects extends FormBase {
                     <table>
                     <thead>
                         <tr>
+                        <th>Subject Code</th>
                         <th>Subject Name</th>
                         <th>Units</th>
-                        <th>Remarks</th>
+                        <th>Hours/per Week</th>
+                        <th>Program</th>
                         </tr>
                     </thead>
                     <tbody class="subjectsAvailableBody">
-        
+                    '.$data.'
                     </tbody>
                     </table>
                 </div>'),
@@ -142,6 +166,7 @@ class ActiveSubjects extends FormBase {
         return $form['form-container'];
 
     }
+
     
         /**
      * {@inheritdoc}

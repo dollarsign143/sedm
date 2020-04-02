@@ -48,7 +48,7 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                 'subject_uid' => NULL,
                 'subject_code' => $subject['code'],
                 'subject_desc' => $subject['description'],
-                'subject_isActive' => $subject['isActive'],
+                'subject_isActive' => $subject['isActive'] ? 'active' : 'inactive',
                 'subjCat_uid' => $subject['subjCat'],
                 'college_uid' => $subject['collegeUID'],
             ])
