@@ -146,6 +146,18 @@ class EnrollmentEvaluation extends FormBase {
             
             $EDO = new EvaluationDatabaseOperations();
             $stud_info = $EDO->getStudentInfo($data['id_number']);
+            $curri_uid = $stud_info[0]->curriculum_uid;
+            $availableSubjects = $EDO->getAvailableSubjects($data, $curri_uid);
+
+            $data = NULL;
+            
+            foreach($availableSubjects as $availableSubject => $key){
+                $data .= '<tr>
+                    <td>'.$key['subj_code'].'</td>
+                    <td>'.$key['subj_description'].'</td>
+                    <td>'.$key['subj_units'].'</td>
+                </tr>';
+            }
 
             $form['form-container']['student-info-fieldset'] = [
                 '#type' => 'fieldset',
@@ -190,10 +202,60 @@ class EnrollmentEvaluation extends FormBase {
                 ],
             ];
 
+            $form['form-container']['student-info-fieldset']['stud-info-container']['age'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Age'),
+                '#value' => ucwords($stud_info[0]->studProf_age),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container']['gender'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Gender'),
+                '#value' => ucwords($stud_info[0]->studProf_gender),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container']['college'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('College'),
+                '#value' => ucwords($stud_info[0]->college_abbrev),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container']['year'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Year Level'),
+                '#value' => ucwords($stud_info[0]->student_yearLevel),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
+            $form['form-container']['student-info-fieldset']['stud-info-container']['program'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Program'),
+                '#value' => ucwords($stud_info[0]->program_abbrev),
+                '#attributes' => [
+                    'class' => ['flat-input',],
+                    'disabled' => TRUE,
+                ],
+            ];
+
             $form['form-container']
             ['subject-table-container']['subjectsAvailable'] = [
                 '#type' => 'details',
-                '#title' => $this->t('Advisable Subjects'),
+                '#title' => $this->t('Available Subjects'),
                 '#open' => TRUE,
             ];
 
@@ -211,13 +273,13 @@ class EnrollmentEvaluation extends FormBase {
                     <table>
                     <thead>
                         <tr>
-                        <th>Subject Name</th>
+                        <th>Code</th>
+                        <th>Description</th>
                         <th>Units</th>
-                        <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody class="subjectsAvailableBody">
-
+                    '.$data.'
                     </tbody>
                     </table>
                 </div>'),
