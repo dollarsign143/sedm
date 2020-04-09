@@ -1,7 +1,6 @@
 .flat-input {
     width: 100%;
     padding: 6px 10px;
-    margin: 8px 0;
     display: inline-block;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -36,7 +35,7 @@ input.flat-btn {
 
     .inline-container-col2 > div {
         display: inline-block;
-        width: 47%;
+        width: 45%;
         padding: 6px 10px;
     }
 
