@@ -10,10 +10,12 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Logger\LoggerChannelTrait;
 
 use Drupal\sedm\Database\EvaluationDatabaseOperations;
 
 class EnrollmentEvaluation extends FormBase {
+    use LoggerChannelTrait;
 
     /**
      * {@inheritdoc}
@@ -129,166 +131,192 @@ class EnrollmentEvaluation extends FormBase {
      */
     public function searchAvailableSubjects(array &$form, FormStateInterface $form_state){
 
-
+        $logger = $this->getLogger('sedm');
+        
         if($form_state->getErrors()){
 
             $form['form-container']['student']
             ['notice-container']['status_messages'] = [
                 '#type' => 'status_messages',
             ];
+
+            return $form['form-container'];
         }
             // this condition will append the subjects table
         else{
 
-            $data['id_number'] = $form_state->getValue(['form-container','student','details-container','idNumber']);
-            $data['year_level'] = $form_state->getValue(['form-container','student','details-container','select_container','yearLevel']);
-            $data['semester'] = $form_state->getValue(['form-container','student','details-container','select_container','semester']);
+            $info['id_number'] = $form_state->getValue(['form-container','student','details-container','idNumber']);
+            $info['year_level'] = $form_state->getValue(['form-container','student','details-container','select_container','yearLevel']);
+            $info['semester'] = $form_state->getValue(['form-container','student','details-container','select_container','semester']);
             
             $EDO = new EvaluationDatabaseOperations();
-            $stud_info = $EDO->getStudentInfo($data['id_number']);
-            $curri_uid = $stud_info[0]->curriculum_uid;
-            $availableSubjects = $EDO->getAvailableSubjects($data, $curri_uid);
-
-            $data = NULL;
+            $stud_info = $EDO->getStudentInfo($info['id_number']);
+            $logger->info(count($stud_info));
             
-            foreach($availableSubjects as $availableSubject => $key){
-                $data .= '<tr>
-                    <td>'.$key['subj_code'].'</td>
-                    <td>'.$key['subj_description'].'</td>
-                    <td>'.$key['subj_units'].'</td>
-                </tr>';
+            if(empty($stud_info)){
+                $response = new AjaxResponse();
+                $content['form-container']['notice-container']['message'] = [
+                    '#type' => 'item',
+                    '#markup' => $this->t('Can\'t find the ID number!'),
+                ];
+                $command = new OpenModalDialogCommand($this->t('Error!'), $content, ['width' => '50%',]);
+
+                $response->addCommand($command);
+            
+                return $response;
+
             }
+            else {
+                $curri_uid = $stud_info[0]->curriculum_uid;
+                $availableSubjects = $EDO->getAvailableSubjects($info, $curri_uid);
+    
+                $data = NULL;
+                if(empty($availableSubjects)){
+                    $data .= '<tr>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                    </tr>';
+                }
+                else {
+                    foreach($availableSubjects as $availableSubject => $key){
+                        $data .= '<tr>
+                            <td>'.$key['subj_code'].'</td>
+                            <td>'.$key['subj_description'].'</td>
+                            <td>'.$key['subj_units'].'</td>
+                        </tr>';
+                    }
+                }
 
-            $form['form-container']['student-info-fieldset'] = [
-                '#type' => 'fieldset',
-                '#title' => 'Student Info.',
-                '#weight' => 2
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container'] = [
-                '#type' => 'container',
-                '#attributes' => [
-                    'class' => ['inline-container-col3',],
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['last-name'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('Last Name'),
-                '#value' => ucwords($stud_info[0]->studProf_lname),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['first-name'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('First Name'),
-                '#value' => ucwords($stud_info[0]->studProf_fname),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['middle-name'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('Middle Name'),
-                '#value' => ucwords($stud_info[0]->studProf_mname),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['age'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('Age'),
-                '#value' => ucwords($stud_info[0]->studProf_age),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['gender'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('Gender'),
-                '#value' => ucwords($stud_info[0]->studProf_gender),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['college'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('College'),
-                '#value' => ucwords($stud_info[0]->college_abbrev),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['year'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('Year Level'),
-                '#value' => ucwords($stud_info[0]->student_yearLevel),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']['student-info-fieldset']['stud-info-container']['program'] = [
-                '#type' => 'textfield',
-                '#title' => $this->t('Program'),
-                '#value' => ucwords($stud_info[0]->program_abbrev),
-                '#attributes' => [
-                    'class' => ['flat-input',],
-                    'disabled' => TRUE,
-                ],
-            ];
-
-            $form['form-container']
-            ['subject-table-container']['subjectsAvailable'] = [
-                '#type' => 'details',
-                '#title' => $this->t('Available Subjects'),
-                '#open' => TRUE,
-            ];
-
-            $form['form-container']
-            ['subject-table-container']['subjectsAvailable']['description'] = [
-                '#type' => 'item',
-                '#markup' => $this->t('The subjects listed below are advisable to enroll.'),
-            ];
-
-            $form['form-container']
-            ['subject-table-container']['subjectsAvailable']['table'] = [
-                '#type' => 'markup',
-                '#markup' => $this->t('
-                <div>
-                    <table>
-                    <thead>
-                        <tr>
-                        <th>Code</th>
-                        <th>Description</th>
-                        <th>Units</th>
-                        </tr>
-                    </thead>
-                    <tbody class="subjectsAvailableBody">
-                    '.$data.'
-                    </tbody>
-                    </table>
-                </div>'),
-            ];
+                $form['form-container']['student-info-fieldset'] = [
+                    '#type' => 'fieldset',
+                    '#title' => 'Student Info.',
+                    '#weight' => 2
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container'] = [
+                    '#type' => 'container',
+                    '#attributes' => [
+                        'class' => ['inline-container-col3',],
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['last-name'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Last Name'),
+                    '#value' => ucwords($stud_info[0]->studProf_lname),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['first-name'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('First Name'),
+                    '#value' => ucwords($stud_info[0]->studProf_fname),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['middle-name'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Middle Name'),
+                    '#value' => ucwords($stud_info[0]->studProf_mname),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['age'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Age'),
+                    '#value' => ucwords($stud_info[0]->studProf_age),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['gender'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Gender'),
+                    '#value' => ucwords($stud_info[0]->studProf_gender),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['college'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('College'),
+                    '#value' => ucwords($stud_info[0]->college_abbrev),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['year'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Year Level'),
+                    '#value' => ucwords($stud_info[0]->student_yearLevel),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['program'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Program'),
+                    '#value' => ucwords($stud_info[0]->program_abbrev),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']
+                ['subject-table-container']['subjectsAvailable'] = [
+                    '#type' => 'details',
+                    '#title' => $this->t('Available Subjects'),
+                    '#open' => TRUE,
+                ];
+    
+                $form['form-container']
+                ['subject-table-container']['subjectsAvailable']['description'] = [
+                    '#type' => 'item',
+                    '#markup' => $this->t('The subjects listed below are advisable to enroll.'),
+                ];
+    
+                $form['form-container']
+                ['subject-table-container']['subjectsAvailable']['table'] = [
+                    '#type' => 'markup',
+                    '#markup' => $this->t('
+                    <div>
+                        <table>
+                        <thead>
+                            <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Units</th>
+                            </tr>
+                        </thead>
+                        <tbody class="subjectsAvailableBody">
+                        '.$data.'
+                        </tbody>
+                        </table>
+                    </div>'),
+                ];
             
-
+                return $form['form-container'];
+            }
         }
-
-        return $form['form-container'];
 
     }
 
