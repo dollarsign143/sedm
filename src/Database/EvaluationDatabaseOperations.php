@@ -75,15 +75,24 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
         $availableSubjs = array();
 
+        // Algorithm:
+        // #1: get the curriculum subjects of a certain year level and semester
         $curri_subjs = $this->getCurriculumSubjects($curri_uid, $data['year_level'], $data['semester']);
+        // #2: for each subjects fetched will proceed to a 3 layer checking
         foreach($curri_subjs as $curri_subj){
+            // #2.1: checking the subject using its code
             $enrolledSubjInfo = $this->getEnrolledSubjectInfoByCode($data['id_number'], $curri_subj->subject_code);
+            // 2.1.1: if the subject is not found, proceed to checking the subject by description
             if(empty($enrolledSubjInfo)){
+                // #2.2: checking the subject using its description
                 $enrolledSubjInfo = $this->getEnrolledSubjectInfoByDesc($data['id_number'], $curri_subj->subject_desc);
-                if(empty($enrolledSubjInfo)){ // check if subject is enrolled previously
+                // #2.2.1: if the subject is not found.. proceed to the next checking the prerequisite satifactory
+                if(empty($enrolledSubjInfo)){ 
+                    // #2.3: check the prerequisite 1 satisfactory
                     $isPrereque1Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite1);
+                    // #2.4: check the prerequisite 2 satisfactory
                     $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2);
-                    
+                    // #2.5: if the prerequisites are satisfied the subject will be included to the available subjects for student
                     if($isPrereque1Satisfied && $isPrereque2Satisfied){
                         $availableSubjs[$curri_subj->subject_uid] = [
                             'subj_code' => $curri_subj->subject_code,
@@ -92,10 +101,13 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                         ];
                     }
                 }
+                // #2.2.2: if the subject is found/enrolled proceed to checking the remarks satifactory
                 else {
-                    //get subject Remarks
+                    // #2.2.3: check the subject's remarks satisfactory
                     $isEnrolledSubjectRemarksSatisfied = $this->isSubjectRemarksSatisfied($enrolledSubjInfo);
-                    if(!$isEnrolledSubjectRemarksSatisfied){ // if enrolled subject is not satisfied
+                    // #2.2.4: if the enrolled subject's remarks are not satisfied. the subject will be added
+                    // to the available subjects
+                    if(!$isEnrolledSubjectRemarksSatisfied){ 
                         $availableSubjs[$curri_subj->subject_uid] = [
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
@@ -104,10 +116,13 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     }
                 }
             }
+            // #2.1.2: if the subject is found/enrolled proceed to checking the remarks satifactory
             else {
-                //get subject Remarks
+                // #2.1.3: check the subject's remarks satisfactory
                 $isEnrolledSubjectRemarksSatisfied = $this->isSubjectRemarksSatisfied($enrolledSubjInfo);
-                if(!$isEnrolledSubjectRemarksSatisfied){ // if enrolled subject is not satisfied
+                // #2.1.4: if the enrolled subject's remarks are not satisfied. the subject will be added
+                // to the available subjects
+                if(!$isEnrolledSubjectRemarksSatisfied){ 
                     $availableSubjs[$curri_subj->subject_uid] = [
                         'subj_code' => $curri_subj->subject_code,
                         'subj_description' => $curri_subj->subject_desc,

@@ -10,12 +10,13 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Logger\LoggerChannelTrait;
 
-use Drupal\sedm\Database\DatabaseOperations;
+use Drupal\sedm\Database\EvaluationDatabaseOperations;
 
 
 class EvaluationForGraduation extends FormBase {
-
+    use LoggerChannelTrait;
     /**
      * {@inheritdoc}
      */
@@ -91,45 +92,48 @@ class EvaluationForGraduation extends FormBase {
         // this condition will return errors to the form if there are
         if($form_state->getErrors()){
     
-          $form['form-container']['student-details-container']
-          ['notice-container']['status_messages'] = [
-            '#type' => 'status_messages',
-          ];
+            $form['form-container']['student-details-container']
+            ['notice-container']['status_messages'] = [
+                '#type' => 'status_messages',
+            ];
     
         }
         else {
     
-          $studIdNumber = $form_state->getValue(['form-container','student-details-container','id-container','id-number']);
-    
-          $form['form-container']['eval-sheet-container']['eval-sheet'] = [
-            '#type' => 'details',
-            '#title' => $this->t('Student\'s Subjects'),
-            '#open' => TRUE,
-          ];
-      
-          $form['form-container']['eval-sheet-container']['eval-sheet']['description'] = [
-              '#type' => 'item',
-              '#markup' => $this->t('The subjects listed below are evaluated.'),
-          ];
-      
-          $form['form-container']['eval-sheet-container']['eval-sheet']['table'] = [
-              '#type' => 'markup',
-              '#markup' => $this->t('
-              <div>
-                  <table>
-                  <thead>
-                      <tr>
-                      <th>Subject Name</th>
-                      <th>Units</th>
-                      <th>Remarks</th>
-                      </tr>
-                  </thead>
-                  <tbody class="subjectsAvailableBody">
-      
-                  </tbody>
-                  </table>
-              </div>'),
-          ];
+            $studIdNumber = $form_state->getValue(['form-container','student-details-container','id-container','id-number']);
+        
+            $EDO = new EvaluationDatabaseOperations();
+            $stud_info = $EDO->getStudentInfo($studIdNumber);
+
+            $form['form-container']['eval-sheet-container']['eval-sheet'] = [
+                '#type' => 'details',
+                '#title' => $this->t('Student\'s Subjects'),
+                '#open' => TRUE,
+            ];
+        
+            $form['form-container']['eval-sheet-container']['eval-sheet']['description'] = [
+                '#type' => 'item',
+                '#markup' => $this->t('The subjects listed below are evaluated.'),
+            ];
+        
+            $form['form-container']['eval-sheet-container']['eval-sheet']['table'] = [
+                '#type' => 'markup',
+                '#markup' => $this->t('
+                <div>
+                    <table>
+                    <thead>
+                        <tr>
+                        <th>Subject Name</th>
+                        <th>Units</th>
+                        <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody class="subjectsAvailableBody">
+        
+                    </tbody>
+                    </table>
+                </div>'),
+            ];
     
         }
     
