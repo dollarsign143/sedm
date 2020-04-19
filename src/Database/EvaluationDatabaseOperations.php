@@ -216,29 +216,15 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         return $result;
     }
 
-    public function isSubjectPrereqSatisfied($stud_uid, $preRequi_uid){
-        //setting up test_drupal_data database into active connection
-        Database::setActiveConnection('test_drupal_data');
-        // get the active connection and put into an object
-        $connection = Database::getConnection();
+    public function isSubjectPrereqSatisfied($stud_id, $preRequi_uid){
 
         if($preRequi_uid == 'none'){
             return true;
         }
         else {
-            $query = $connection->query('SELECT * FROM students_subjects
-            WHERE student_uid = :stud_uid
-            AND subject_uid = :subj_uid', 
-            [
-                ':stud_uid' => $stud_uid,
-                ':subj_uid' => $preRequi_uid,
-            ]);
-    
-            $result = $query->fetchAll();
-            
-            Database::closeConnection();
-    
-            return $this->isSubjectRemarksSatisfied($result);
+            $stud_info = $this->getStudentInfo($stud_id);
+            $remarks = $this->getStudSubjectRemarks($stud_info[0]->student_uid, $preRequi_uid);
+            return $this->isSubjectRemarksSatisfied($remarks);
         }
 
     }
@@ -249,16 +235,29 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
             return false;
         }
         else {
-            if($subject[0]->studSubj_finalRemarks == 'INC' || 
-            $subject[0]->studSubj_finalRemarks == 'DRP' || 
-            $subject[0]->studSubj_finalRemarks == 'DROP' || 
-            $subject[0]->studSubj_finalRemarks > 3 || 
-            empty($subject)){
+            if($subject[0]->studSubj_remarks == 'INC' ||
+             empty($subject[0]->studSubj_remarks)){
+
+                if($subject[0]->studSubj_finalRemarks == 'INC' || 
+                $subject[0]->studSubj_finalRemarks == 'DRP' || 
+                $subject[0]->studSubj_finalRemarks == 'DROP' || 
+                $subject[0]->studSubj_finalRemarks > 3 || 
+                empty($subject)){
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
+            elseif ($subject[0]->studSubj_remarks == 'DRP' || 
+            $subject[0]->studSubj_remarks == 'DROP' || 
+            $subject[0]->studSubj_remarks > 3) {
                 return false;
             }
             else {
                 return true;
             }
+
         }
         
     }

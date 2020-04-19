@@ -76,10 +76,18 @@ class EvaluationForGraduation extends FormBase {
             ],
         ];
 
+        $form['form-container']['stud-info-container'] = [
+            '#type' => 'container',
+            '#prefix' => '<div id="stud-info-container-wrapper">',
+            '#suffix' => '</div>',
+            '#weight' => 2
+        ];
+
         $form['form-container']['eval-sheet-container'] = [
             '#type' => 'container',
             '#prefix' => '<div id="eval-sheet-container-wrapper">',
             '#suffix' => '</div>',
+            '#weight' => 3
         ];
 
         return $form;
@@ -124,20 +132,20 @@ class EvaluationForGraduation extends FormBase {
                 $curri_uid = $stud_info[0]->curriculum_uid;
                 $stud_uid = $stud_info[0]->student_uid;
 
-                $form['form-container']['student-info-fieldset'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset'] = [
                     '#type' => 'fieldset',
                     '#title' => 'Student Info.',
                     '#weight' => 2,
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container'] = [
                     '#type' => 'container',
                     '#attributes' => [
                         'class' => ['inline-container-col3',],
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['last-name'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['last-name'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('Last Name'),
                     '#value' => ucwords($stud_info[0]->studProf_lname),
@@ -147,7 +155,7 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['first-name'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['first-name'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('First Name'),
                     '#value' => ucwords($stud_info[0]->studProf_fname),
@@ -157,7 +165,7 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['middle-name'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['middle-name'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('Middle Name'),
                     '#value' => ucwords($stud_info[0]->studProf_mname),
@@ -167,7 +175,7 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['age'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['age'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('Age'),
                     '#value' => ucwords($stud_info[0]->studProf_age),
@@ -177,7 +185,7 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['gender'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['gender'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('Gender'),
                     '#value' => ucwords($stud_info[0]->studProf_gender),
@@ -187,7 +195,7 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['college'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['college'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('College'),
                     '#value' => ucwords($stud_info[0]->college_abbrev),
@@ -197,7 +205,7 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['year'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['year'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('Year Level'),
                     '#value' => ucwords($stud_info[0]->student_yearLevel),
@@ -207,7 +215,7 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['student-info-fieldset']['stud-info-container']['program'] = [
+                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['program'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('Program'),
                     '#value' => ucwords($stud_info[0]->program_abbrev),
@@ -220,7 +228,6 @@ class EvaluationForGraduation extends FormBase {
                 $form['form-container']['eval-sheet-container']['eval-sheet'] = [
                     '#type' => 'fieldset',
                     '#title' => $this->t('Evaluated Subjects'),
-                    '#weight' => 3,
                 ];
                 // ALGORITHM
                 // #1: get subject categories
@@ -229,7 +236,6 @@ class EvaluationForGraduation extends FormBase {
                 foreach($categories as $category){
                     $data = NULL;
                     $category_total_units = 0;
-                    $weight += 1;
 
                     if($category->subjCat_uid == 10 || $category->subjCat_name == 'ELECTIVE SUBJECT'){
                         $category_subjs = $EDO->getCurriculumElectiveSubjects($curri_uid);
