@@ -43,7 +43,7 @@ class EvaluationForGraduation extends FormBase {
 
         $form['form-container']['student-details-container'] = [
             '#type' => 'fieldset',
-            '#title' => 'Student Info.'
+            '#title' => 'Fill out some info.',
         ];
 
         $form['form-container']['student-details-container']['notice-container'] = [
@@ -96,6 +96,8 @@ class EvaluationForGraduation extends FormBase {
             ['notice-container']['status_messages'] = [
                 '#type' => 'status_messages',
             ];
+
+            return $form['form-container'];
     
         }
         else {
@@ -104,40 +106,208 @@ class EvaluationForGraduation extends FormBase {
         
             $EDO = new EvaluationDatabaseOperations();
             $stud_info = $EDO->getStudentInfo($studIdNumber);
+            
+            if(empty($stud_info)){
+                $response = new AjaxResponse();
+                $content['form-container']['notice-container']['message'] = [
+                    '#type' => 'item',
+                    '#markup' => $this->t('Can\'t find the ID number!'),
+                ];
+                $command = new OpenModalDialogCommand($this->t('Error!'), $content, ['width' => '50%',]);
 
-            $form['form-container']['eval-sheet-container']['eval-sheet'] = [
-                '#type' => 'details',
-                '#title' => $this->t('Student\'s Subjects'),
-                '#open' => TRUE,
-            ];
-        
-            $form['form-container']['eval-sheet-container']['eval-sheet']['description'] = [
-                '#type' => 'item',
-                '#markup' => $this->t('The subjects listed below are evaluated.'),
-            ];
-        
-            $form['form-container']['eval-sheet-container']['eval-sheet']['table'] = [
-                '#type' => 'markup',
-                '#markup' => $this->t('
-                <div>
-                    <table>
-                    <thead>
-                        <tr>
-                        <th>Subject Name</th>
-                        <th>Units</th>
-                        <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody class="subjectsAvailableBody">
-        
-                    </tbody>
-                    </table>
-                </div>'),
-            ];
+                $response->addCommand($command);
+            
+                return $response;
+
+            }
+            else {
+                $curri_uid = $stud_info[0]->curriculum_uid;
+                $stud_uid = $stud_info[0]->student_uid;
+
+                $form['form-container']['student-info-fieldset'] = [
+                    '#type' => 'fieldset',
+                    '#title' => 'Student Info.',
+                    '#weight' => 2,
+                ];
     
+                $form['form-container']['student-info-fieldset']['stud-info-container'] = [
+                    '#type' => 'container',
+                    '#attributes' => [
+                        'class' => ['inline-container-col3',],
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['last-name'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Last Name'),
+                    '#value' => ucwords($stud_info[0]->studProf_lname),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['first-name'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('First Name'),
+                    '#value' => ucwords($stud_info[0]->studProf_fname),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['middle-name'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Middle Name'),
+                    '#value' => ucwords($stud_info[0]->studProf_mname),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['age'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Age'),
+                    '#value' => ucwords($stud_info[0]->studProf_age),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['gender'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Gender'),
+                    '#value' => ucwords($stud_info[0]->studProf_gender),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['college'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('College'),
+                    '#value' => ucwords($stud_info[0]->college_abbrev),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['year'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Year Level'),
+                    '#value' => ucwords($stud_info[0]->student_yearLevel),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+    
+                $form['form-container']['student-info-fieldset']['stud-info-container']['program'] = [
+                    '#type' => 'textfield',
+                    '#title' => $this->t('Program'),
+                    '#value' => ucwords($stud_info[0]->program_abbrev),
+                    '#attributes' => [
+                        'class' => ['flat-input',],
+                        'disabled' => TRUE,
+                    ],
+                ];
+
+                $form['form-container']['eval-sheet-container']['eval-sheet'] = [
+                    '#type' => 'fieldset',
+                    '#title' => $this->t('Evaluated Subjects'),
+                    '#weight' => 3,
+                ];
+                // ALGORITHM
+                // #1: get subject categories
+                $categories = $EDO->getSubjectCategories();
+                // #2: for each category get subjects
+                foreach($categories as $category){
+                    $data = NULL;
+                    $category_total_units = 0;
+                    $weight += 1;
+
+                    if($category->subjCat_uid == 10 || $category->subjCat_name == 'ELECTIVE SUBJECT'){
+                        $category_subjs = $EDO->getCurriculumElectiveSubjects($curri_uid);
+                    }
+                    else {
+                        // #2.1: get the subject of the specified category
+                        $category_subjs = $EDO->getCurriculumSubjectsByCategory($curri_uid, $category->subjCat_uid);
+                    }
+                    
+                    // #3: for each subject check the remarks on the student
+                    foreach($category_subjs as $subj){
+                        $category_total_units += ($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits);
+                        $remarks = $EDO->getStudSubjectRemarks($stud_uid, $subj->subject_uid);
+                        if(empty($remarks)){
+                            $data .= '<tr>
+                                <td>'.$subj->subject_code.'</td>
+                                <td>'.$subj->subject_desc.'</td>
+                                <td>'.($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits).'</td>
+                                </tr>';
+                        }
+                        else {
+                            if(empty($remarks[0]->studSubj_finalRemarks)){
+                                $final_remarks = $remarks[0]->studSubj_remarks;
+                            }
+                            else {
+                                $final_remarks = $remarks[0]->studSubj_finalRemarks;
+                            }
+                            $data .= '<tr>
+                            <td>'.$subj->subject_code.'</td>
+                            <td>'.$subj->subject_desc.'</td>
+                            <td>'.($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits).'</td>
+                            <td>'.$final_remarks.'</td>
+                            </tr>';
+                        }
+                        
+                    }
+
+                    $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid] = [
+                        '#type' => 'details',
+                        '#title' => $this->t($category->subjCat_name),
+                        '#open' => TRUE,
+                    ];
+
+                    $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid]['description'] = [
+                        '#type' => 'item',
+                        '#markup' => $this->t('The subjects listed below are evaluated.'),
+                    ];
+
+                    $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid]['table'] = [
+                        '#type' => 'markup',
+                        '#markup' => $this->t('
+                        <div>
+                            <table>
+                            <thead>
+                                <tr>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Units</th>
+                                <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody class="subjectsAvailableBody">
+                            '.$data.'
+                            </tbody>
+                            </table>
+                        </div>'),
+                    ];
+
+                    $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid]['total_units'] = [
+                        '#type' => 'item',
+                        '#markup' => $this->t('Total Units: @total_units', ['@total_units' => $category_total_units]),
+                    ];
+                }
+
+                return $form['form-container'];
+            }
+
         }
-    
-        return $form['form-container'];
     
     }
 

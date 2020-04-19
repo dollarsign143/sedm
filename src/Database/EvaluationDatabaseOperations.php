@@ -4,10 +4,12 @@ namespace Drupal\sedm\Database;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Logger\LoggerChannelTrait;
 
 use Drupal\sedm\Database\DatabaseOperations;
 
 class EvaluationDatabaseOperations extends DatabaseOperations {
+    use LoggerChannelTrait;
 
     public function getActiveSubjects($college){
         //setting up test_drupal_data database into active connection
@@ -229,10 +231,11 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
             AND subject_uid = :subj_uid', 
             [
                 ':stud_uid' => $stud_uid,
+                ':subj_uid' => $preRequi_uid,
             ]);
     
             $result = $query->fetchAll();
-    
+            
             Database::closeConnection();
     
             return $this->isSubjectRemarksSatisfied($result);
@@ -241,17 +244,92 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
     }
 
     public function isSubjectRemarksSatisfied($subject){
-
-        if($subject[0]->studSubj_finalRemarks == 'INC' || 
-        $subject[0]->studSubj_finalRemarks == 'DRP' || 
-        $subject[0]->studSubj_finalRemarks == 'DROP' || 
-        $subject[0]->studSubj_finalRemarks > 3){
+    
+        if(empty($subject)){
             return false;
         }
         else {
-            return true;
+            if($subject[0]->studSubj_finalRemarks == 'INC' || 
+            $subject[0]->studSubj_finalRemarks == 'DRP' || 
+            $subject[0]->studSubj_finalRemarks == 'DROP' || 
+            $subject[0]->studSubj_finalRemarks > 3 || 
+            empty($subject)){
+                return false;
+            }
+            else {
+                return true;
+            }
         }
         
+    }
+
+    // 
+
+    public function getCurriculumSubjectsByCategory($curri_uid, $subj_cat){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query('SELECT *
+        FROM subjects_category, subjects, curriculum_subjects
+        WHERE subjects_category.subjCat_uid = subjects.subjCat_uid
+        AND subjects.subject_uid = curriculum_subjects.subject_uid
+        AND subjects_category.subjCat_uid = :subjCat_uid
+        AND curriculum_subjects.curriculum_uid = :curri_uid', 
+        [
+            ':subjCat_uid' => $subj_cat,
+            ':curri_uid' => $curri_uid,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
+    public function getCurriculumElectiveSubjects($curri_uid){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query('SELECT *
+        FROM curriculum_electives, subjects
+        WHERE curriculum_electives.electiveSubj_uid = subjects.subject_uid
+        AND curriculum_uid = :curri_uid', 
+        [
+            ':curri_uid' => $curri_uid,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
+    public function getStudSubjectRemarks($stud_uid, $subject_uid){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query('SELECT *
+        FROM students_subjects
+        WHERE student_uid = :stud_uid
+        AND subject_uid = :subj_uid', 
+        [
+            ':stud_uid' => $stud_uid,
+            ':subj_uid' => $subject_uid,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
     }
 
 }
