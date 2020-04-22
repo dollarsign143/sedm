@@ -66,6 +66,33 @@ sedm.menu.curriculum.subjects.tab.verify.subject.modal.form:
     _permission: 'access content'
 
 
+# ++++++++++++++++++ Temporary Routes ++++++++++++++++++++++++++++++++++
+
+sedm.menu.temporary.register.tab:
+  path: 'sedm/menu/temporary/register/student'
+  defaults:
+    _form: '\Drupal\sedm\Form\Temporary\RegisterStudentForm'
+    _title: 'Register New Student'
+  requirements:
+    _permission: 'access content'
+
+
+sedm.menu.temporary.input.subject:
+  path: 'sedm/menu/temporary/input/student/grades'
+  defaults:
+    _form: '\Drupal\sedm\Form\Temporary\InputStudentGradesForm'
+    _title: 'Input Student Grades'
+  requirements:
+    _permission: 'access content'
+
+sedm.menu.temporary.verify.insert.subject.grade.modal.form:
+  path: 'sedm/menu/temporary/input/student/grades/verify'
+  defaults:
+    _form: '\Drupal\sedm\Form\Modals\Temporary\VerifyInsertSubjectGradeModalForm'
+    _title: 'Input Student Grades'
+  requirements:
+    _permission: 'access content'
+
 #################### THE END OF THE ROUTES ##############################
 
 

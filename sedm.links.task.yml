@@ -14,5 +14,19 @@ sedm.curriculum.tab.subjects:
   base_route: sedm.menu.curriculum.default.tab
   weight: 2
 
+
+# ++++++++++++ TEMPORARY TABS ++++++++++++++++++++
+
+sedm.temporary.tab.register.student:
+  route_name: sedm.menu.temporary.register.tab
+  title: Register New Student
+  base_route: sedm.menu.temporary.register.tab
+
+sedm.temporary.tab.input.student.subject:
+  route_name: sedm.menu.temporary.input.subject
+  title: Student Grades
+  base_route: sedm.menu.temporary.register.tab
+  weight: 2
+
 ################ THE END OF LINK TASKS ################################
 
