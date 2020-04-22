@@ -151,7 +151,6 @@ class EnrollmentEvaluation extends FormBase {
             
             $EDO = new EvaluationDatabaseOperations();
             $stud_info = $EDO->getStudentInfo($info['id_number']);
-            $logger->info(count($stud_info));
             
             if(empty($stud_info)){
                 $response = new AjaxResponse();
