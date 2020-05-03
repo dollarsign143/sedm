@@ -126,7 +126,7 @@ class VerifyInsertSubjectGradeModalForm extends FormBase {
         $TDO = new TemporaryDatabaseOperations(); // instantiate DatabaseOperations Class
         $subj_info = $_SESSION['sedm']['temp_subj_info'];
         $stud_info = $TDO->getStudentInfo($subj_info['id_number']);
-        $isSubjectAlreadyHaveGrade = $TDO->checkSubjectOnStudentSubjects($subj_info['subject_uid']);
+        $isSubjectAlreadyHaveGrade = $TDO->checkSubjectOnStudentSubjects($stud_info[0]->student_uid, $subj_info['subject_uid']);
 
         if($isSubjectAlreadyHaveGrade){
           $logger->info('subject has no grade');

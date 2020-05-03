@@ -216,18 +216,15 @@ class DatabaseOperations {
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
-        $query = $connection->query("SELECT * FROM {curriculums}
+        $query = $connection->query("SELECT * 
+        FROM curriculums
         WHERE program_uid = :programUID AND curriculum_no = :curri_num", 
         [
             ':programUID' => $programUID,
             ':curri_num' => $curri_num,
         ]);
 
-        $tempRes = $query->fetchAll();
-
-        foreach($tempRes as $res){
-            $result = $res;
-        }
+        $result = $query->fetchAll();
 
         Database::closeConnection();
 
@@ -237,7 +234,7 @@ class DatabaseOperations {
     public function isCurriculumAvailable($programUID, $curri_num){
 
         $result = $this->getCurriculumInfo($programUID, $curri_num);
-        return ($result == NULL) ? true : false;
+        return (empty($result)) ? true : false;
         
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sedm\Form\Templates\Evaluation;
+namespace Drupal\sedm\Form\Templates\Curriculum\SubjectsTab;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -12,16 +12,16 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Logger\LoggerChannelTrait;
 
-use Drupal\sedm\Database\EvaluationDatabaseOperations;
+use Drupal\sedm\Database\CurriculumDatabaseOperations;
 
-class EnrollmentEvaluation extends FormBase {
+class SearchSubjectForm extends FormBase {
     use LoggerChannelTrait;
 
     /**
      * {@inheritdoc}
      */
     public function getFormId() {
-        return 'sedm_evaluation_menu_enrollment_evaluation';
+        return 'sedm_curriculum_menu_search_subject';
     }
 
     /**
@@ -32,84 +32,49 @@ class EnrollmentEvaluation extends FormBase {
         $form['#tree'] = TRUE;
         $form['form-container'] = [
             '#type' => 'container',
-            '#prefix' => '<div id="enrollment-eval-form-container-wrapper">',
+            '#prefix' => '<div id="search-subject-form-container-wrapper">',
             '#suffix' => '</div>',
         ];
 
         $form['form-container']['form-title'] = [
             '#type' => 'item',
-            '#markup' => $this->t('<h2>Enrollment Evaluation</h2>'),
+            '#markup' => $this->t('<h2>Search Subject</h2>'),
         ];
 
-        $form['form-container']['student'] = [
+        $form['form-container']['subject-info'] = [
             '#type' => 'details',
-            '#title' => 'Fill out student info.',
+            '#title' => 'Fill out subject info.',
             '#open' => TRUE,
         ];
 
-        $form['form-container']['student']['notice-container'] = [
+        $form['form-container']['subject-info']['notice-container'] = [
             '#type' => 'container',
         ];
 
-        $form['form-container']['student']['details-container'] = [
+        $form['form-container']['subject-info']['details-container'] = [
             '#type' => 'container',
             '#weight' => 1
         ];
 
-        $form['form-container']['student']['details-container']['idNumber'] = [
+        $form['form-container']['subject-info']['details-container']['subj_details'] = [
             '#type' => 'textfield',
-            '#title' => 'Id number',
+            '#title' => 'Enter Subject Code or Description',
             '#attributes' => [
                 'class' => ['flat-input',],
-                'placeholder' => $this->t('2015-0001'),
+                'placeholder' => $this->t('Ex. Math 1.7 or College Algebra'),
             ],
         ];
 
-        $form['form-container']['student']['details-container']['select_container'] = [
-            '#type' => 'container',
-            '#attributes' => [
-                'class' => ['inline-container-col2',],
-            ],
-        ];
 
-        $years = [
-            'first-year' => 'First Year',
-            'second-year' => 'Second Year',
-            'third-year' => 'Third Year',
-            'fourth-year' => 'Fourth Year'
-        ];
-        $form['form-container']['student']['details-container']['select_container']['yearLevel'] = [
-            '#type' => 'select',
-            '#title' => 'Year Level',
-            '#options' => $years,
-            '#attributes' => [
-                'class' => ['flat-element',],
-            ],
-        ];
-
-        $semesters = [
-            'first-sem' => 'First Semester',
-            'second-sem' => 'Second Semester',
-            'summer-sem' => 'Summer'
-        ];
-        $form['form-container']['student']['details-container']['select_container']['semester'] = [
-            '#type' => 'select',
-            '#title' => 'Select Semester',
-            '#options' => $semesters,
-            '#attributes' => [
-                'class' => ['flat-element',],
-            ],
-        ];
-
-        $form['form-container']['student']['details-container']['evaluate'] = [
+        $form['form-container']['subject-info']['details-container']['search'] = [
             '#type' => 'submit',
-            '#value' => 'Evaluate',
+            '#value' => 'Search',
             '#attributes' => [
                 'class' => ['flat-btn',],
             ],
             '#ajax' => [
-                'callback' => '::searchAvailableSubjects',
-                'wrapper' => 'enrollment-eval-form-container-wrapper', 
+                'callback' => '::searchSubject',
+                'wrapper' => 'search-subject-form-container-wrapper', 
                 'event' => 'click',
             ]
         ];
@@ -318,15 +283,100 @@ class EnrollmentEvaluation extends FormBase {
 
     }
 
+    public function searchSubject(array &$form, FormStateInterface $form_state){
+        
+        if($form_state->getErrors()){
+
+            $form['form-container']['subject-info']
+            ['notice-container']['status_messages'] = [
+                '#type' => 'status_messages',
+            ];
+
+            return $form['form-container'];
+        }
+        else {
+
+            $subject = $form_state->getValue(['form-container','subject-info','details-container','subj_details']);
+            $CDO = new CurriculumDatabaseOperations();
+
+            $subj_info = $CDO->getSubjectInfoByCode($subject);
+
+            $data = NULL;
+            if(empty($subj_info)){
+                $subj_info = $CDO->getSubjectInfoByDesc($subject);
+                if(empty($subj_info)){
+                    $data .= $this->t('<tr>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                    </tr>');
+                }
+                else {
+                    foreach($subj_info as $subject){
+                        $data .= $this->t('<tr>
+                            <td>'.$subject->subject_code.'</td>
+                            <td>'.$subject->subject_desc.'</td>
+                            <td>'.$subject->college_abbrev.'</td>
+                            <td>'.$subject->subjCat_name.'</td>
+                            <td>'.$subject->subject_isActive.'</td>
+                        </tr>');
+                    }
+                }
+            }
+            else {
+                
+                foreach($subj_info as $subject){
+                    $data .= $this->t('<tr>
+                        <td>'.$subject->subject_code.'</td>
+                        <td>'.$subject->subject_desc.'</td>
+                        <td>'.$subject->college_abbrev.'</td>
+                        <td>'.$subject->subjCat_name.'</td>
+                        <td>'.$subject->subject_isActive.'</td>
+                    </tr>');
+                }
+            }
+
+            $form['form-container']['subject-table-container']['subject-details'] = [
+                '#type' => 'details',
+                '#title' => 'Subject Details',
+                '#open' => TRUE,
+            ];
+            $form['form-container']['subject-table-container']['subject-details']['subject-details-table'] = [
+                '#type' => 'item',
+                '#markup' => $this->t('
+                <div>
+                    <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>College</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="subject-details-table-body">
+                    '.$data.'
+                    </tbody>
+                    </table>
+                </div>'),
+            ];
+
+            return $form['form-container'];
+        }
+    }
+
     /**
      * {@inheritdoc}
      */
     public function validateForm(array &$form, FormStateInterface $form_state) {
 
-        $idNumber = $form_state->getValue(['form-container','student','details-container','idNumber']);
+        $subject = $form_state->getValue(['form-container','subject-info','details-container','subj_details']);
 
-        if(empty($idNumber)){
-            $form_state->setError($form, $this->t('ID number is empty!'));
+        if(empty($subject)){
+            $form_state->setError($form, $this->t('Subject info. is empty!'));
         }
     }
 
