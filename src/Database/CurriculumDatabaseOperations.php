@@ -268,7 +268,62 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
 
     }
 
-    
+    public function getSubjectInfoByCode($subj_code){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query('SELECT *
+        FROM subjects, subjects_category, colleges
+        WHERE subjects.subjCat_uid = subjects_category.subjCat_uid
+        AND subjects.college_uid = colleges.college_uid
+        AND subjects.subject_code LIKE :subj_code',
+        [
+            ':subj_code' => '%'. ucwords($subj_code) .'%',
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
+    public function getSubjectInfoByDesc($subj_desc){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query("SELECT *
+        FROM subjects, subjects_category, colleges
+        WHERE subjects.subjCat_uid = subjects_category.subjCat_uid
+        AND subjects.college_uid = colleges.college_uid
+        AND subjects.subject_desc LIKE :subj_desc", 
+        [
+            ':subj_desc' => '%'.ucwords($subj_desc).'%',
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
 
 }
 

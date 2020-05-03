@@ -83,7 +83,7 @@ class TemporaryDatabaseOperations extends DatabaseOperations{
 
     }
 
-    public function checkSubjectOnStudentSubjects($subj_uid){
+    public function checkSubjectOnStudentSubjects($stud_uid, $subj_uid){
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');
         // get the active connection and put into an object
@@ -91,9 +91,11 @@ class TemporaryDatabaseOperations extends DatabaseOperations{
 
         $query = $connection->query("SELECT *
         FROM students_subjects
-        WHERE subject_uid = :subj_uid",
+        WHERE subject_uid = :subj_uid
+        AND student_uid = :stud_uid",
         [
             ':subj_uid' => $subj_uid,
+            ':stud_uid' => $stud_uid,
         ]);
 
         $result = $query->fetchAll();
