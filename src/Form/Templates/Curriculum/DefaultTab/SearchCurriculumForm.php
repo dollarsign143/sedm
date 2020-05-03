@@ -56,13 +56,14 @@ class SearchCurriculumForm extends FormBase{
             
         // Curriculum Info fieldset
         $form['form-container']['curriculum'] = [
-            '#type' => 'fieldset',
-            '#title' => 'Curriculum Info.'
+            '#type' => 'details',
+            '#title' => 'Curriculum Info.',
+            '#open' => TRUE,
         ];
             
             
         // Curriculum Notice container
-        $form['form-container']['curriculum']['notice-container'] = [
+        $form['form-container']['curriculum']['message-container'] = [
             '#type' => 'container',
         ];
             
@@ -129,21 +130,30 @@ class SearchCurriculumForm extends FormBase{
             'placeholder' => 'Ex. 2019-001',
             'class' => ['flat-input', ],
             ],
-            '#weight' => 4,
+            '#weight' => 3,
         ];
 
         $form['form-container']['curriculum']['actions'] = [
-            '#type' => 'actions'
+            '#type' => 'actions',
+            '#weight' => 4,
         ];
 
         $form['form-container']['curriculum']['actions']['search'] = [
             '#type' => 'submit',
-            '#value' => 'Search'
+            '#value' => 'Search',
+            '#attributes' => [
+                'class' => ['flat-btn',],
+            ],
+            '#ajax' => [
+                'callback' => '::searchCurriculum',
+                'wrapper' => 'search-curriculum-subjects-container-wrapper', 
+                'event' => 'click',
+            ]
         ];
             
-        $form['form-container']['curriculum']['subjects-container'] = [
+        $form['form-container']['curriculum-subjects']['subjects-container'] = [
             '#type' => 'container',
-            '#prefix' => '<div id="subjects-container-wrapper">',
+            '#prefix' => '<div id="search-curriculum-subjects-container-wrapper">',
             '#suffix' => '</div>',
         ];
 
@@ -183,6 +193,137 @@ class SearchCurriculumForm extends FormBase{
     
     } 
 
+    public function searchCurriculum(array &$form, FormStateInterface $form_state){
+
+        if($form_state->getErrors()){
+
+            $content['form-container']['notice-container']['message'] = [
+                '#type' => 'status_messages',
+            ];
+            return $this->errorModal($content);
+        }
+        else {
+            $info['college'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','college']);
+            $info['program'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','program']);
+            $info['curri_num'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','curriculum-num']);
+            
+            $CDO = new CurriculumDatabaseOperations();
+            $curri_info = $CDO->getCurriculumInfo($info['program'], $info['curri_num']);
+
+            if(empty($curri_info)){
+                $content['form-container']['notice-container']['message'] = [
+                    '#type' => 'item',
+                    '#markup' => $this->t('No matching item!'),
+                ];
+                return $this->errorModal($content);
+            }
+            else {
+                return $this->buildCurriculumData($form, $form_state, $curri_info);
+            }
+        }
+
+    }
+
+    public function buildCurriculumData(array &$form, FormStateInterface $form_state, $curri_info = array()){
+
+        foreach(self::$years as $year => $yearTitle){
+            $form['form-container']['curriculum-subjects']['subjects-container'][$year] = [
+                '#type' => 'details',
+                '#title' => $yearTitle,
+            ];
+            
+            $form['form-container']['curriculum-subjects']['subjects-container'][$year]['description'] = [
+                '#type' => 'item',
+                '#markup' => $this->t('The subjects listed below are subjects advisable for @year students.', 
+                ['@year' => strtolower($yearTitle)]),
+
+            ];
+
+            foreach(self::$sems as $sem => $semTitle){
+
+                $form['form-container']['curriculum-subjects']['subjects-container'][$year][$sem] = [
+                    "#type" => 'fieldset',
+                    '#title' => $semTitle,
+                ];
+
+                $form['form-container']['curriculum-subjects']['subjects-container'][$year][$sem][$sem.'-container'] = [
+                    '#type' => 'container',
+                    '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
+                    '#suffix' => '</div>',
+                    '#attributes' => [
+                        'class' => ['container-block', ],
+                    ],
+                ];
+
+                $CDO = new CurriculumDatabaseOperations();
+                $subjects = $CDO->getCurriculumSubjects($year, $sem, $curri_info[0]->curriculum_uid);
+
+                $data = NULL;
+                if(empty($subjects)){
+                    $data .= '<tr>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                    </tr>';
+                }
+                else {
+                    foreach($subjects as $subject => $key){
+                        $prerequi1 = $CDO->getSubjectInfoByUID($key->curricSubj_prerequisite1);
+                        $prerequi2 = $CDO->getSubjectInfoByUID($key->curricSubj_prerequisite2);
+                        $data .= '<tr>
+                            <td>'.$key->subject_code.'</td>
+                            <td>'.$key->subject_desc.'</td>
+                            <td>'.$key->curricSubj_labUnits.'</td>
+                            <td>'.$key->curricSubj_lecUnits.'</td>
+                            <td>'.$key->curricSubj_labHours.'</td>
+                            <td>'.$key->curricSubj_lecHours.'</td>
+                            <td>'.$prerequi1[0]->subject_code.', '.$prerequi2[0]->subject_code.'</td>
+                        </tr>';
+                    }
+                }
+
+                $form['form-container']['curriculum-subjects']['subjects-container'][$year][$sem][$sem.'-container']['table'] = [
+                    '#type' => 'markup',
+                    '#markup' => $this->t('
+                    <div>
+                        <table>
+                        <thead>
+                            <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Laboratory Units</th>
+                            <th>Lecture Units</th>
+                            <th>Laboratory Hours</th>
+                            <th>Lecture Hours</th>
+                            <th>Prerequisites</th>
+                            </tr>
+                        </thead>
+                        <tbody class="curriculumSubjectsBody">
+                        '.$data.'
+                        </tbody>
+                        </table>
+                    </div>'),
+                ];
+            }
+        }
+
+        return $form['form-container']['curriculum-subjects']['subjects-container'];
+
+    }
+
+    public function errorModal($content){
+        $response = new AjaxResponse();
+
+        $command = new OpenModalDialogCommand($this->t('Error!'), $content, ['width' => '50%',]);
+
+        $response->addCommand($command);
+    
+        return $response;
+    }
 
     /**
      * {@inheritdoc}

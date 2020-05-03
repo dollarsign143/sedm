@@ -188,17 +188,17 @@ class RegisterCurriculumForm extends FormBase{
             foreach(self::$sems as $sem => $semTitle){
 
                 $form['form-container']['curriculum']['subjects-container'][$year][$sem] = [
-                "#type" => 'fieldset',
-                '#title' => $semTitle,
+                    "#type" => 'fieldset',
+                    '#title' => $semTitle,
                 ];
 
                 $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'] = [
-                '#type' => 'container',
-                '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
-                '#suffix' => '</div>',
-                '#attributes' => [
-                    'class' => ['container-block', ],
-                ],
+                    '#type' => 'container',
+                    '#prefix' => '<div id="subjects-'.$year.'-'.$sem.'-container-wrapper">',
+                    '#suffix' => '</div>',
+                    '#attributes' => [
+                        'class' => ['container-block', ],
+                    ],
                 ];
 
 

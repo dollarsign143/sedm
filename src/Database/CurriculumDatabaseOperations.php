@@ -325,6 +325,93 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
         return $result;
     }
 
+    public function getSubjectInfoByUID($subj_uid){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query('SELECT *
+        FROM subjects
+        WHERE subject_uid = :subject_uid',
+        [
+            ':subject_uid' => $subj_uid,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
+    // public function getCurriculumInfo($curri_info){
+    //     //setting up test_drupal_data database into active connection
+    //     Database::setActiveConnection('test_drupal_data');
+    //     // get the active connection and put into an object
+    //     $connection = Database::getConnection();
+
+    //     /**
+    //      * Example Query
+    //      * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+    //      *      ':created' => REQUEST_TIME - 3600,
+    //      *    ]);
+    //      */
+
+    //     $query = $connection->query("SELECT *
+    //     FROM curriculums
+    //     WHERE curriculum_no = :curri_num
+    //     AND program_uid = :program_uid", 
+    //     [
+    //         ':curri_num' => $curri_info['curri_num'],
+    //         ':program_uid' => $curri_info['program']
+    //     ]);
+
+    //     $result = $query->fetchAll();
+
+    //     Database::closeConnection();
+
+    //     return $result;
+    // }
+
+    public function getCurriculumSubjects($year, $sem, $curri_uid){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query("SELECT *
+        FROM curriculum_subjects, subjects
+        WHERE curriculum_subjects.subject_uid = subjects.subject_uid
+        AND curriculum_subjects.curriculum_uid = :curri_uid
+        AND curriculum_subjects.curricSubj_year = :year
+        AND curriculum_subjects.curricSubj_sem = :sem", 
+        [
+            ':curri_uid' => $curri_uid,
+            ':year' => $year,
+            ':sem' => $sem
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
 }
 
 ?>
