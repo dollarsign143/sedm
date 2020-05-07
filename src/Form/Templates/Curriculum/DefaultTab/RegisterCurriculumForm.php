@@ -42,6 +42,7 @@ class RegisterCurriculumForm extends FormBase{
      */
     public function buildForm(array $form, FormStateInterface $form_state) {
         // Initial container to contain whole form
+        $form['#tree'] = TRUE;
         $form['form-container'] = [
             '#type' => 'container',
             '#prefix' => '<div id="reg-curriculum-form-container-wrapper">',
@@ -491,7 +492,7 @@ class RegisterCurriculumForm extends FormBase{
 
         // get the value of selected college
         $college = $form_state->getValue(['form-container', 'curriculum', 'curriculum-info-container','college']);
-    
+        
         $form_state->set('selected_college', $college);
         // instatiate DatabaseOperations Class
         $CDO = new CurriculumDatabaseOperations();
@@ -500,6 +501,7 @@ class RegisterCurriculumForm extends FormBase{
         if($college != NULL){
     
           $programs = $CDO->getProgramsByCollege($college);
+          
           $programOpt = array();
       
           foreach ($programs as $program) {
@@ -507,12 +509,12 @@ class RegisterCurriculumForm extends FormBase{
             $programOpt[$program->program_uid] = $program->program_abbrev.' - '.$program->program_name;
       
           }
-    
+          
           $form['form-container']['curriculum']['curriculum-info-container']
           ['program']['#options'] = $programOpt;
     
         }
-      
+        
         return $form['form-container']['curriculum']['curriculum-info-container'];
     
     }
@@ -780,22 +782,6 @@ class RegisterCurriculumForm extends FormBase{
 
     }
 
-    public function validateForm(array &$form, FormStateInterface $form_state){
-        $response = new AjaxResponse();
-        if($form_state->getErrors()){
-
-            $content['form-container']['notice-container']['status_messages'] = [
-            '#type' => 'status_messages',
-            ];
-
-            $command = new OpenDialogCommand('#register-curriculum-notice-dialog',$this->t('Register New Curriculum'), $content, ['width' => '50%',]);
-
-            $response->addCommand($command);
-
-            return $response;
-
-        }
-    }
     /**
      * {@inheritdoc}
      */

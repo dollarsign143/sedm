@@ -70,7 +70,7 @@ class SearchCurriculumForm extends FormBase{
         // this container holds the inlinement of  
         $form['form-container']['curriculum']['curriculum-info-container'] = [
             '#type' => 'container',
-            '#prefix' => '<div id="curriculum-info-container-wrapper">',
+            '#prefix' => '<div id="search-curriculum-info-container-wrapper">',
             '#suffix' => '</div>',
             '#attributes'  => [
                 'class' => ['inline-container-col2', ]
@@ -102,7 +102,7 @@ class SearchCurriculumForm extends FormBase{
             '#submit' => ['::form_rebuild'],
             '#ajax' => [
                 'callback' => '::buildProgramSelection',
-                'wrapper' => 'curriculum-info-container-wrapper',
+                'wrapper' => 'search-curriculum-info-container-wrapper',
                 'event' => 'change',
             ],
             '#weight' => 1,
