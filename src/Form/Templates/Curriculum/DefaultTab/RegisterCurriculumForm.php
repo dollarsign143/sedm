@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
@@ -41,6 +42,7 @@ class RegisterCurriculumForm extends FormBase{
      */
     public function buildForm(array $form, FormStateInterface $form_state) {
         // Initial container to contain whole form
+        $form['#tree'] = TRUE;
         $form['form-container'] = [
             '#type' => 'container',
             '#prefix' => '<div id="reg-curriculum-form-container-wrapper">',
@@ -188,7 +190,7 @@ class RegisterCurriculumForm extends FormBase{
             foreach(self::$sems as $sem => $semTitle){
 
                 $form['form-container']['curriculum']['subjects-container'][$year][$sem] = [
-                    "#type" => 'fieldset',
+                    "#type" => 'details',
                     '#title' => $semTitle,
                 ];
 
@@ -489,9 +491,8 @@ class RegisterCurriculumForm extends FormBase{
     public function buildProgramSelection(array &$form, FormStateInterface $form_state){
 
         // get the value of selected college
-        $college = $form_state->getValue(['register-curriculum','register-curriculum-container',
-        'register-curriculum-form','form-container', 'curriculum', 'curriculum-info-container','college']);
-    
+        $college = $form_state->getValue(['form-container', 'curriculum', 'curriculum-info-container','college']);
+        
         $form_state->set('selected_college', $college);
         // instatiate DatabaseOperations Class
         $CDO = new CurriculumDatabaseOperations();
@@ -500,6 +501,7 @@ class RegisterCurriculumForm extends FormBase{
         if($college != NULL){
     
           $programs = $CDO->getProgramsByCollege($college);
+          
           $programOpt = array();
       
           foreach ($programs as $program) {
@@ -507,15 +509,13 @@ class RegisterCurriculumForm extends FormBase{
             $programOpt[$program->program_uid] = $program->program_abbrev.' - '.$program->program_name;
       
           }
-    
-          $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-          ['form-container']['curriculum']['curriculum-info-container']
+          
+          $form['form-container']['curriculum']['curriculum-info-container']
           ['program']['#options'] = $programOpt;
     
         }
-      
-        return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-        ['form-container']['curriculum']['curriculum-info-container'];
+        
+        return $form['form-container']['curriculum']['curriculum-info-container'];
     
     }
     
@@ -545,8 +545,7 @@ class RegisterCurriculumForm extends FormBase{
         $sem = $data['sem'];
         $form_state->setTriggeringElement(NULL);
 
-        return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-        ['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'];
+        return $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'];
     
     }
 
@@ -598,8 +597,7 @@ class RegisterCurriculumForm extends FormBase{
      */
     public function updateElectiveSubjectCallback(array &$form, FormStateInterface $form_state){
 
-        return $form['register-curriculum']['register-curriculum-container']['register-curriculum-form']
-        ['form-container']['curriculum']['subjects-container']['elective']['subjects-elective-container'];
+        return $form['form-container']['curriculum']['subjects-container']['elective']['subjects-elective-container'];
 
     }
 
@@ -662,27 +660,21 @@ class RegisterCurriculumForm extends FormBase{
             $curr_subjs = array();
             $curr_info = array();
 
-            $curr_info['curr_num'] = $form_state->getValue(['register-curriculum','register-curriculum-container',
-            'register-curriculum-form','form-container','curriculum','curriculum-info-container','curriculum-num']);
+            $curr_info['curr_num'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','curriculum-num']);
 
-            $curr_info['curr_schoolYear'] = $form_state->getValue(['register-curriculum','register-curriculum-container',
-            'register-curriculum-form','form-container','curriculum','curriculum-info-container','curriculum-school-year']);
+            $curr_info['curr_schoolYear'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','curriculum-school-year']);
 
-            $curr_info['curr_yearCreated'] = $form_state->getValue(['register-curriculum','register-curriculum-container',
-            'register-curriculum-form','form-container','curriculum','curriculum-info-container','curriculum-year']);
+            $curr_info['curr_yearCreated'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','curriculum-year']);
 
-            $curr_info['curr_college'] = $form_state->getValue(['register-curriculum','register-curriculum-container',
-            'register-curriculum-form','form-container','curriculum','curriculum-info-container','college']);
+            $curr_info['curr_college'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','college']);
 
-            $curr_info['curr_program'] = $form_state->getValue(['register-curriculum','register-curriculum-container',
-            'register-curriculum-form','form-container','curriculum','curriculum-info-container','program']);
+            $curr_info['curr_program'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','program']);
 
             foreach(self::$years as $year => $yearTitle){
             
             foreach(self::$sems as $sem => $semTitle){
         
                 $subjects = $form_state->getValue([
-                'register-curriculum','register-curriculum-container','register-curriculum-form',
                 'form-container', 'curriculum', 'subjects-container', 
                 $year, $sem, $sem.'-container', $sem.'_subjects_container']);
 
@@ -692,7 +684,6 @@ class RegisterCurriculumForm extends FormBase{
             }
 
             $electives = $form_state->getValue([
-            'register-curriculum','register-curriculum-container','register-curriculum-form',
             'form-container','curriculum','subjects-container',
             'elective','subjects-elective-container'
             ]);
@@ -795,7 +786,7 @@ class RegisterCurriculumForm extends FormBase{
      * {@inheritdoc}
      */
     public function submitForm(array &$form, FormStateInterface $form_state) {
-
+        
     }
 
 
