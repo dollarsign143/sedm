@@ -180,7 +180,7 @@ class SearchCurriculumForm extends FormBase{
         
             foreach ($programs as $program) {
         
-            $programOpt[$program->program_uid] = $program->program_abbrev.' - '.$program->program_name;
+                $programOpt[$program->program_uid] = $program->program_abbrev.' - '.$program->program_name;
         
             }
 
