@@ -96,7 +96,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         AND curriculum_subjects.subject_uid = subjects.subject_uid
         AND subjects.subject_isActive = :active
         AND subjects.college_uid = :college_uid
-        AND subjects.subject_code LIKE :keyword', [
+        AND subjects.subject_desc LIKE :keyword', [
 
             ':active' => 'active',
             ':college_uid' => $college,

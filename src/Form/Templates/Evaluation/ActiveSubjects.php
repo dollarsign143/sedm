@@ -145,6 +145,7 @@ class ActiveSubjects extends FormBase {
             
             if(empty($activeSubjects)){
                 $activeSubjects = $EDO->getActiveSubjectsByDesc($college, $keyword);
+                
                 if(empty($activeSubjects)){
                     $data = $this->t(
                         '<tr>
@@ -156,6 +157,20 @@ class ActiveSubjects extends FormBase {
                         </tr>'
                     );
                 }
+                else {
+                    foreach($activeSubjects as $activeSubject){
+                        $data .= $this->t(
+                            '<tr>
+                            <td>'.$activeSubject->subject_code.'</td>
+                            <td>'.$activeSubject->subject_desc .'</td>
+                            <td>'.($activeSubject->curricSubj_labUnits + $activeSubject->curricSubj_lecUnits).'</td>
+                            <td>'.($activeSubject->curricSubj_labHours + $activeSubject->curricSubj_lecHours).'</td>
+                            <td>'.$activeSubject->program_abbrev.'</td>
+                            </tr>'
+                        );
+                    }
+                }
+                
             }
             else {
                 foreach($activeSubjects as $activeSubject){
