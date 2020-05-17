@@ -87,8 +87,6 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         foreach($curri_subjs as $curri_subj){
             // #2.1: checking the subject using its code
             
-            //BUG @STABLE RELEASE 1.1.0
-            // passing id number on getEnrolledSubjectInfoByCode which it only accepts 
             $enrolledSubjInfo = $this->getEnrolledSubjectInfoByCode($data['id_number'], $curri_subj->subject_code);;
             // 2.1.1: if the subject is not found, proceed to checking the subject by description
             if(empty($enrolledSubjInfo)){
