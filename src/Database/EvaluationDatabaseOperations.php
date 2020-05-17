@@ -11,6 +11,7 @@ use Drupal\sedm\Database\DatabaseOperations;
 class EvaluationDatabaseOperations extends DatabaseOperations {
     use LoggerChannelTrait;
 
+    // TODO: Add searching subject alternative showing active subjects
     public function getActiveSubjects($college){
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');
@@ -25,7 +26,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
          */
 
         $query = $connection->query('SELECT *
-        FROM {subjects, curriculum_subjects, curriculums, programs}
+        FROM subjects, curriculum_subjects, curriculums, programs
         WHERE programs.program_uid = curriculums.program_uid
         AND curriculums.curriculum_uid = curriculum_subjects.curriculum_uid
         AND curriculum_subjects.subject_uid = subjects.subject_uid
@@ -33,6 +34,74 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         AND subjects.college_uid = :college_uid', [
             ':active' => 'active',
             ':college_uid' => $college,
+        ]);
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
+    public function getActiveSubjectsByCode($college, $keyword){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query('SELECT *
+        FROM subjects, curriculum_subjects, curriculums, programs
+        WHERE programs.program_uid = curriculums.program_uid
+        AND curriculums.curriculum_uid = curriculum_subjects.curriculum_uid
+        AND curriculum_subjects.subject_uid = subjects.subject_uid
+        AND subjects.subject_isActive = :active
+        AND subjects.college_uid = :college_uid
+        AND subjects.subject_code LIKE :keyword', [
+
+            ':active' => 'active',
+            ':college_uid' => $college,
+            ':keyword' => '%'.$keyword.'%',
+
+        ]);
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+    }
+
+    public function getActiveSubjectsByDesc($college, $keyword){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query('SELECT *
+        FROM subjects, curriculum_subjects, curriculums, programs
+        WHERE programs.program_uid = curriculums.program_uid
+        AND curriculums.curriculum_uid = curriculum_subjects.curriculum_uid
+        AND curriculum_subjects.subject_uid = subjects.subject_uid
+        AND subjects.subject_isActive = :active
+        AND subjects.college_uid = :college_uid
+        AND subjects.subject_code LIKE :keyword', [
+
+            ':active' => 'active',
+            ':college_uid' => $college,
+            ':keyword' => '%'.$keyword.'%',
+
         ]);
         $result = $query->fetchAll();
 

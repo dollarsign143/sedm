@@ -38,15 +38,14 @@ class ActiveSubjects extends FormBase {
             '#markup' => $this->t('<h2>Active Subjects</h2>'),
         ];
 
-        $form['form-container']['subject-details-container'] = [
+        $form['form-container']['notice-container'] = [
+            '#type' => 'container',
+        ];
+
+        $form['form-container']['subject-info-container'] = [
             '#type' => 'fieldset',
             '#title' => 'Subject Info.'
         ];
-
-        $form['form-container']['subject-details-container']['college-container'] = [
-            '#type' => 'container'
-        ];
-
 
         /**
          * @Variable $dbOperations = object to hold DatabaseOperations class
@@ -64,7 +63,7 @@ class ActiveSubjects extends FormBase {
 
         }
 
-        $form['form-container']['subject-details-container']['college-container']['college-select'] = [
+        $form['form-container']['subject-info-container']['college-select'] = [
             '#type' => 'select',
             '#title' => $this->t('Select College'),
             '#options' => $collegeOpt,
@@ -72,10 +71,28 @@ class ActiveSubjects extends FormBase {
             '#attributes' => [
                 'class' => ['flat-element',],
             ],
+        ];
+
+        $form['form-container']['subject-info-container']['subject-keyword'] = [
+            '#type' => 'textfield',
+            '#title' => 'Subject Code or Description',
+            '#attributes' => [
+                'class' => ['flat-input',],
+                'placeholder' => $this->t('Ex. Math 1.7 or College Algebra'),
+            ],
+        ];
+
+        $form['form-container']['subject-info-container']['search'] = [
+            '#type' => 'submit',
+            '#value' => 'Search',
+            '#attributes' => [
+                'class' => ['flat-btn',],
+            ],
             '#ajax' => [
                 'callback' => '::displayActiveSubjects',
                 'wrapper' => 'active-subjects-form-container-wrapper',
-              ],
+                'event' => 'click',
+            ],
         ];
 
         $form['form-container']['subject-details-container']['subjects-table-container'] = [
@@ -90,15 +107,20 @@ class ActiveSubjects extends FormBase {
 
     public function displayActiveSubjects(array &$form, FormStateInterface $form_state){
 
-        // get the value of selected college
+        if($form_state->getErrors()){
 
-        $college = $form_state->getValue([
-            'form-container','subject-details-container',
-            'college-container','college-select',
-          ]);
+            $form['form-container']['notice-container']['status_messages'] = [
+                '#type' => 'status_messages',
+            ];
 
-        if(!empty($college)){
-
+            return $form['form-container'];
+        }
+        else {
+            $college = $form_state->getValue([
+                'form-container', 'subject-info-container', 'college-select',]);
+            $keyword = $form_state->getValue([
+                'form-container', 'subject-info-container', 'subject-keyword']);
+    
             $form['form-container']['subject-details-container']
             ['subjects-table-container']['subjects-table'] = [
                 '#type' => 'details',
@@ -114,17 +136,26 @@ class ActiveSubjects extends FormBase {
         
             $EDO = new EvaluationDatabaseOperations(); // instantiate EvaluationDatabaseOperations Class
             $data = NULL;
-            $activeSubjects = $EDO->getActiveSubjects($college);
+            if(empty($keyword)){
+                $activeSubjects = $EDO->getActiveSubjects($college);
+            }
+            else {
+                $activeSubjects = $EDO->getActiveSubjectsByCode($college, $keyword);
+            }
+            
             if(empty($activeSubjects)){
-                $data = $this->t(
-                    '<tr>
-                    <td>NONE</td>
-                    <td>NONE</td>
-                    <td>NONE</td>
-                    <td>NONE</td>
-                    <td>NONE</td>
-                    </tr>'
-                );
+                $activeSubjects = $EDO->getActiveSubjectsByDesc($college, $keyword);
+                if(empty($activeSubjects)){
+                    $data = $this->t(
+                        '<tr>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        </tr>'
+                    );
+                }
             }
             else {
                 foreach($activeSubjects as $activeSubject){
@@ -161,9 +192,10 @@ class ActiveSubjects extends FormBase {
                     </table>
                 </div>'),
             ];
+            
+    
+            return $form['form-container'];
         }
-
-        return $form['form-container'];
 
     }
 
@@ -172,6 +204,15 @@ class ActiveSubjects extends FormBase {
      * {@inheritdoc}
      */
     public function validateForm(array &$form, FormStateInterface $form_state) {
+
+        $college = $form_state->getValue([
+            'form-container', 'subject-info-container', 'college-select',]);
+        $keyword = $form_state->getValue([
+            'form-container', 'subject-info-container', 'subject-keyword']);
+
+        if(empty($college)){
+            $form_state->setErrorByName('college-select', $this->t("Please select a college!"));
+        }
     }
 
         /**
