@@ -311,6 +311,64 @@ class SearchCurriculumForm extends FormBase{
             }
         }
 
+        $form['form-container']['curriculum-subjects']['subjects-container']['electives'] = [
+            '#type' => 'details',
+            '#title' => $this->t('Electives'),
+        ];
+        
+        $form['form-container']['curriculum-subjects']['subjects-container']['electives']['description'] = [
+            '#type' => 'item',
+            '#markup' => $this->t('The subjects listed below are elective subjects.'),
+        ];
+
+        $CDO = new CurriculumDatabaseOperations();
+        $electives = $CDO->getCurriculumElectiveSubjects($curri_info[0]->curriculum_uid);
+
+        $electiveData = NULL;
+        if(empty($electives)){
+            $data .= '<tr>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+            </tr>';
+        }
+        else {
+            foreach($electives as $elective => $key){
+                $prerequi1 = $CDO->getSubjectInfoByUID($key->electiveSubj_prerequisite1);
+                $prerequi2 = $CDO->getSubjectInfoByUID($key->electiveSubj_prerequisite2);
+                $electiveData .= '<tr>
+                    <td>'.$key->subject_code.'</td>
+                    <td>'.$key->subject_desc.'</td>
+                    <td>'.$key->curricSubj_labUnits.'</td>
+                    <td>'.$key->curricSubj_lecUnits.'</td>
+                    <td>'.$prerequi1[0]->subject_code.', '.$prerequi2[0]->subject_code.'</td>
+                </tr>';
+            }
+        }
+
+        $form['form-container']['curriculum-subjects']['subjects-container']['electives']['table'] = [
+            '#type' => 'markup',
+            '#markup' => $this->t('
+            <div>
+                <table>
+                <thead>
+                    <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Laboratory Units</th>
+                    <th>Lecture Units</th>
+                    <th>Prerequisites</th>
+                    </tr>
+                </thead>
+                <tbody class="curriculumElectiveSubjectsBody">
+                '.$electiveData.'
+                </tbody>
+                </table>
+            </div>'),
+        ];
+
         return $form['form-container']['curriculum-subjects']['subjects-container'];
 
     }

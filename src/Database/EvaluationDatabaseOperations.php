@@ -75,6 +75,9 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
+        $logger = $this->getLogger('sedm');
+        $logger->info('getAvailableSubjects');
+
         $availableSubjs = array();
 
         // Algorithm:
@@ -83,7 +86,8 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         // #2: for each subjects fetched will proceed to a 3 layer checking
         foreach($curri_subjs as $curri_subj){
             // #2.1: checking the subject using its code
-            $enrolledSubjInfo = $this->getEnrolledSubjectInfoByCode($data['id_number'], $curri_subj->subject_code);
+            
+            $enrolledSubjInfo = $this->getEnrolledSubjectInfoByCode($data['id_number'], $curri_subj->subject_code);;
             // 2.1.1: if the subject is not found, proceed to checking the subject by description
             if(empty($enrolledSubjInfo)){
                 // #2.2: checking the subject using its description
@@ -124,6 +128,9 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                 $isEnrolledSubjectRemarksSatisfied = $this->isSubjectRemarksSatisfied($enrolledSubjInfo);
                 // #2.1.4: if the enrolled subject's remarks are not satisfied. the subject will be added
                 // to the available subjects
+                
+                $logger->error($isEnrolledSubjectRemarksSatisfied);
+
                 if(!$isEnrolledSubjectRemarksSatisfied){ 
                     $availableSubjs[$curri_subj->subject_uid] = [
                         'subj_code' => $curri_subj->subject_code,
@@ -145,14 +152,15 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
-        $query = $connection->query('SELECT * FROM curriculum_subjects,subjects
+        $query = $connection->query('SELECT * 
+        FROM curriculum_subjects,subjects
         WHERE subjects.subject_uid = curriculum_subjects.subject_uid
-        AND subjects.subject_isActive = :active
+        AND subjects.subject_isActive = :isActive
         AND curriculum_subjects.curriculum_uid = :curr_uid
         AND curriculum_subjects.curricSubj_year = :year_level
         AND curriculum_subjects.curricSubj_sem = :semester',
         [
-            ':active' => 'active',
+            ':isActive' => 'active',
             ':curr_uid' => $curr_uid,
             ':year_level' => $year_level,
             ':semester' => $sem
@@ -166,45 +174,47 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
     }
 
-    public function getEnrolledSubjectInfoByCode($stud_uid, $subject_code){
+    public function getEnrolledSubjectInfoByCode($stud_id, $subject_code){
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
         //query by subject code
-        $query = $connection->query('SELECT * FROM subjects, students_subjects
-        WHERE subjects.subject_uid = students_subjects.subject_uid
-        AND students_subjects.student_uid = :stud_uid
+        $query = $connection->query('SELECT * 
+        FROM students, subjects, students_subjects
+        WHERE students.student_uid = students_subjects.student_uid
+        AND subjects.subject_uid = students_subjects.subject_uid 
+        AND students.student_schoolId = :stud_id
         AND subjects.subject_code LIKE :subj_code', 
         [
-            ':stud_uid' => $stud_uid,
-            ':subj_code' => '"%'.$subject_code.'%"',
+            ':stud_id' => $stud_id,
+            ':subj_code' => '%'.$subject_code.'%',
         ]);
 
         $result = $query->fetchAll();
-
-        if(empty($result))
 
         Database::closeConnection();
 
         return $result;
     }
 
-    public function getEnrolledSubjectInfoByDesc($stud_uid, $subject_desc){
+    public function getEnrolledSubjectInfoByDesc($stud_id, $subject_desc){
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
         //query by subject code
-        $query = $connection->query('SELECT * FROM subjects, students_subjects
-        WHERE subjects.subject_uid = students_subjects.subject_uid
-        AND students_subjects.student_uid = :stud_uid
+        $query = $connection->query('SELECT * 
+        FROM students, subjects, students_subjects
+        WHERE students.student_uid = students_subjects.student_uid
+        AND subjects.subject_uid = students_subjects.subject_uid 
+        AND students.student_schoolId = :stud_id
         AND subjects.subject_desc LIKE :subj_desc', 
         [
-            ':stud_uid' => $stud_uid,
-            ':subj_desc' => '"%'.$subject_desc.'%"',
+            ':stud_id' => $stud_id,
+            ':subj_desc' => '%'.$subject_desc.'%',
         ]);
 
         $result = $query->fetchAll();

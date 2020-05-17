@@ -412,6 +412,35 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
         return $result;
     }
 
+    public function getCurriculumElectiveSubjects($curri_uid){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query("SELECT *
+        FROM curriculum_electives, subjects
+        WHERE curriculum_electives.electiveSubj_uid = subjects.subject_uid
+        AND curriculum_electives.curriculum_uid = :curri_uid", 
+        [
+            ':curri_uid' => $curri_uid,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+
+    }
+
 }
 
 ?>
