@@ -145,7 +145,6 @@ class ActiveSubjects extends FormBase {
             
             if(empty($activeSubjects)){
                 $activeSubjects = $EDO->getActiveSubjectsByDesc($college, $keyword);
-                
                 if(empty($activeSubjects)){
                     $data = $this->t(
                         '<tr>
