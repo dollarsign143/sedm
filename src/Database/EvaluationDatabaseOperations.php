@@ -168,11 +168,15 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     // #2.4: check the prerequisite 2 satisfactory
                     $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2);
                     // #2.5: if the prerequisites are satisfied the subject will be included to the available subjects for student
-                    if($isPrereque1Satisfied && $isPrereque2Satisfied){
+                    if($isPrereque1Satisfied['isSatisfied'] && $isPrereque2Satisfied['isSatisfied']){
                         $availableSubjs[$curri_subj->subject_uid] = [
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
+                            'prerequi1remarks' => $isPrereque1Satisfied['remarks'],
+                            'prerequi2remarks' => $isPrereque2Satisfied['remarks'],
+                            'prerequi1' => $isPrereque1Satisfied['subject_code'],
+                            'prerequi2' => $isPrereque2Satisfied['subject_code'],
                         ];
                     }
                 }
@@ -187,6 +191,10 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
+                            'prerequi1remarks' => NULL,
+                            'prerequi2remarks' => NULL,
+                            'prerequi1' => $isPrereque1Satisfied['subject_code'],
+                            'prerequi2' => $isPrereque2Satisfied['subject_code'],
                         ];
                     }
                 }
@@ -205,6 +213,10 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                         'subj_code' => $curri_subj->subject_code,
                         'subj_description' => $curri_subj->subject_desc,
                         'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
+                        'prerequi1remarks' => NULL,
+                        'prerequi2remarks' => NULL,
+                        'prerequi1' => $isPrereque1Satisfied['subject_code'],
+                        'prerequi2' => $isPrereque2Satisfied['subject_code'],
                     ];
                 }
             }
@@ -297,13 +309,24 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
     public function isSubjectPrereqSatisfied($stud_id, $preRequi_uid){
 
-        if($preRequi_uid == 'none'){
-            return true;
+        if($preRequi_uid == "none"){
+            $status = [
+                "subject_code" => NULL,
+                "remarks" => NULL,
+                "isSatisfied" => true,
+            ];
+            return $status;
         }
         else {
             $stud_info = $this->getStudentInfo($stud_id);
             $remarks = $this->getStudSubjectRemarks($stud_info[0]->student_uid, $preRequi_uid);
-            return $this->isSubjectRemarksSatisfied($remarks);
+            $isSatisfied = $this->isSubjectRemarksSatisfied($remarks);
+            $status = [
+                "subject_code" => $remarks[0]->subject_code,
+                "remarks" => $remarks[0]->studSubj_remarks,
+                "isSatisfied" => $isSatisfied,
+            ];
+            return $status; 
         }
 
     }
@@ -395,9 +418,10 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         $connection = Database::getConnection();
 
         $query = $connection->query('SELECT *
-        FROM students_subjects
-        WHERE student_uid = :stud_uid
-        AND subject_uid = :subj_uid', 
+        FROM students_subjects, subjects
+        WHERE students_subjects.subject_uid = subjects.subject_uid
+        AND students_subjects.student_uid = :stud_uid
+        AND students_subjects.subject_uid = :subj_uid', 
         [
             ':stud_uid' => $stud_uid,
             ':subj_uid' => $subject_uid,

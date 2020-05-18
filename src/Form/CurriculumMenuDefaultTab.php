@@ -66,7 +66,6 @@ class CurriculumMenuDefaultTab extends FormBase {
       $searchCurriForm = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Templates\Curriculum\DefaultTab\SearchCurriculumForm');
       $form['search-curriculum']['search-curriculum-container']['search-curriculum-form'] = $searchCurriForm;
 
-
       /**
        * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
        * ++++++++++++++++++++ Curriculum Registration Part +++++++++++++++++++++++++

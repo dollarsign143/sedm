@@ -174,15 +174,31 @@ class EnrollmentEvaluation extends FormBase {
                         <td>NONE</td>
                         <td>NONE</td>
                         <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
                     </tr>';
                 }
                 else {
                     foreach($availableSubjects as $availableSubject => $key){
-                        $data .= '<tr>
-                            <td>'.$key['subj_code'].'</td>
-                            <td>'.$key['subj_description'].'</td>
-                            <td>'.$key['subj_units'].'</td>
-                        </tr>';
+                        if($key['prerequi1remarks'] == "INC" || $key['prerequi2remarks'] == "INC"){
+                            $data .= '<tr style="background-color: orange" >
+                                <td>'.$key['subj_code'].'</td>
+                                <td>'.$key['subj_description'].'</td>
+                                <td>'.$key['subj_units'].'</td>
+                                <td>'.$key['prerequi1'].', '.$key['prerequi2'].'</td>
+                                <td>INCOMPLETE</td>
+                            </tr>';
+                        }
+                        else {
+                            $data .= '<tr>
+                                <td>'.$key['subj_code'].'</td>
+                                <td>'.$key['subj_description'].'</td>
+                                <td>'.$key['subj_units'].'</td>
+                                <td>'.$key['prerequi1'].', '.$key['prerequi2'].'</td>
+                                <td>OKAY</td>
+                            </tr>';
+                        }
+
                     }
                 }
 
@@ -303,6 +319,8 @@ class EnrollmentEvaluation extends FormBase {
                             <th>Code</th>
                             <th>Description</th>
                             <th>Units</th>
+                            <th>Prerequisites</th>
+                            <th>Prerequisite Status</th>
                             </tr>
                         </thead>
                         <tbody class="subjectsAvailableBody">
