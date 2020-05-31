@@ -11,6 +11,8 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Url;
 use Drupal\Core\Logger\LoggerChannelTrait;
 
 use Drupal\sedm\Database\CurriculumDatabaseOperations;
@@ -226,52 +228,63 @@ class RegisterCurriculumForm extends FormBase{
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
                     [$sem.'_subjects_container'][$subj_field] = [
-                    '#type' => 'container',
-                    '#attributes' => [
-                        'class' => ['inline-container-col2', ],
-                    ],
-                    ];
-
-                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
-                    [$sem.'_subjects_container'][$subj_field]['subj_code'] = [
-                        '#type' => 'select',
-                        '#title' => $this->t('Subject'),
-                        '#options' => $subj_opt,
+                        '#type' => 'container',
                         '#attributes' => [
-                        'class' => ['flat-element', ],
+                            'class' => ['inline-container-col2', ],
                         ],
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
+                    [$sem.'_subjects_container'][$subj_field]['subj_code_autoComplete'] = [
+                        '#type' => 'textfield',
+                        '#title' => $this->t('Subject'),
+                        '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
+                        '#placeholder' => $this->t('Input subject code or description'),
+                        '#attributes' => [
+                            'class' => ['flat-element', ],
+                        ],
+                    ];
+
+                    // $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
+                    // [$sem.'_subjects_container'][$subj_field]['subj_code'] = [
+                    //     '#type' => 'select',
+                    //     '#title' => $this->t('Subject'),
+                    //     '#options' => $subj_opt,
+                    //     '#attributes' => [
+                    //         'class' => ['flat-element', ],
+                    //     ],
+                    // ];
+
+                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
                     [$sem.'_subjects_container'][$subj_field]['number-container'] = [
-                    '#type' => 'container',
-                    '#attributes' => [
-                        'class' => ['inline-container-col5',],
-                    ],
+                        '#type' => 'container',
+                        '#attributes' => [
+                            'class' => ['inline-container-col5',],
+                        ],
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
                     [$sem.'_subjects_container'][$subj_field]['number-container']['lab_units'] = [
-                    '#type' => 'number',
-                    '#title' => $this->t('Laboratory Units'),
-                    '#attributes' => [
-                        'placeholder' => 'Ex. 3',
-                        'class' => ['flat-input', ],
-                    ],
-                    '#min' => '0',
-                    '#max' => '255',
+                        '#type' => 'number',
+                        '#title' => $this->t('Laboratory Units'),
+                        '#attributes' => [
+                            'placeholder' => 'Ex. 3',
+                            'class' => ['flat-input', ],
+                        ],
+                        '#min' => '0',
+                        '#max' => '1000',
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
                     [$sem.'_subjects_container'][$subj_field]['number-container']['lec_units'] = [
-                    '#type' => 'number',
-                    '#title' => $this->t('Lecture Units'),
-                    '#attributes' => [
-                        'placeholder' => 'Ex. 3',
-                        'class' => ['flat-input', ],
-                    ],
-                    '#min' => '0',
-                    '#max' => '255',
+                        '#type' => 'number',
+                        '#title' => $this->t('Lecture Units'),
+                        '#attributes' => [
+                            'placeholder' => 'Ex. 3',
+                            'class' => ['flat-input', ],
+                        ],
+                        '#min' => '0',
+                        '#max' => '1000',
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
@@ -283,7 +296,7 @@ class RegisterCurriculumForm extends FormBase{
                         'class' => ['flat-input', ],
                     ],
                     '#min' => '0',
-                    '#max' => '255',
+                    '#max' => '1000',
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
@@ -295,26 +308,49 @@ class RegisterCurriculumForm extends FormBase{
                         'class' => ['flat-input', ],
                     ],
                     '#min' => '0',
-                    '#max' => '255',
+                    '#max' => '1000',
                     ];
 
-                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$subj_field]['subj_prerequi_1'] = [
-                        '#type' => 'select',
-                        '#title' => $this->t('Prerequisite 1'),
-                        '#options' => $subj_opt,
+                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
+                    [$sem.'_subjects_container'][$subj_field]['subj_prerequisite'] = [
+                        '#type' => 'textfield',
+                        '#title' => $this->t('Pre-Requisite'),
+                        '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
+                        '#placeholder' => $this->t('Input subject code or description'),
                         '#attributes' => [
-                        'class' => ['flat-element', ],
+                            'class' => ['flat-element', ],
                         ],
                     ];
 
-                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container'][$sem.'_subjects_container'][$subj_field]['subj_prerequi_2'] = [
-                        '#type' => 'select',
-                        '#title' => $this->t('Prerequisite 2'),
-                        '#options' => $subj_opt,
+                    // $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
+                    // [$sem.'_subjects_container'][$subj_field]['subj_prerequi_1'] = [
+                    //     '#type' => 'select',
+                    //     '#title' => $this->t('Prerequisite 1'),
+                    //     '#options' => $subj_opt,
+                    //     '#attributes' => [
+                    //     'class' => ['flat-element', ],
+                    //     ],
+                    // ];
+                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
+                    [$sem.'_subjects_container'][$subj_field]['subj_corequisite'] = [
+                        '#type' => 'textfield',
+                        '#title' => $this->t('Co-Requisite'),
+                        '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
+                        '#placeholder' => $this->t('Input subject code or description'),
                         '#attributes' => [
-                        'class' => ['flat-element', ],
+                            'class' => ['flat-element', ],
                         ],
                     ];
+
+                    // $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
+                    // [$sem.'_subjects_container'][$subj_field]['subj_prerequi_2'] = [
+                    //     '#type' => 'select',
+                    //     '#title' => $this->t('Prerequisite 2'),
+                    //     '#options' => $subj_opt,
+                    //     '#attributes' => [
+                    //     'class' => ['flat-element', ],
+                    //     ],
+                    // ];
 
                     if(count($subj_fields) > 1){
 
@@ -373,7 +409,7 @@ class RegisterCurriculumForm extends FormBase{
             '#prefix' => '<div id="subjects-elective-container-wrapper">',
             '#suffix' => '</div>',
             '#attributes' => [
-                'class' => ['inline-container-col4', ],
+                'class' => ['container-block', ],
             ],
         ];
 
@@ -386,33 +422,110 @@ class RegisterCurriculumForm extends FormBase{
 
         foreach($electFields as $electField){
 
-            $form['form-container']['curriculum']['subjects-container']
-            ['elective']['subjects-elective-container'][$electField]['subj_code'] = [
-                '#type' => 'select',
-                '#title' => $this->t('Subject'),
-                '#options' => $subj_opt,
+            $form['form-container']['curriculum']['subjects-container']['elective']['subjects-elective-container']
+            [$electField] = [
+                '#type' => 'container',
                 '#attributes' => [
-                'class' => ['flat-element', ],
+                    'class' => ['inline-container-col2', ],
                 ],
             ];
 
             $form['form-container']['curriculum']['subjects-container']
-            ['elective']['subjects-elective-container'][$electField]['subj_prerequi_1'] = [
-                '#type' => 'select',
-                '#title' => $this->t('Prerequisite 1'),
-                '#options' => $subj_opt,
+            ['elective']['subjects-elective-container'][$electField]['subj_code_autoComplete'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Subject '. $electField),
+                '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
+                '#placeholder' => $this->t('Input subject code or description'),
                 '#attributes' => [
-                'class' => ['flat-element', ],
+                    'class' => ['flat-element', ],
+                ],
+            ];
+
+            // $form['form-container']['curriculum']['subjects-container']
+            // ['elective']['subjects-elective-container'][$electField]['subj_code'] = [
+            //     '#type' => 'select',
+            //     '#title' => $this->t('Subject'),
+            //     '#options' => $subj_opt,
+            //     '#attributes' => [
+            //     'class' => ['flat-element', ],
+            //     ],
+            // ];
+
+            $form['form-container']['curriculum']['subjects-container']
+            ['elective']['subjects-elective-container'][$electField]['number-container'] = [
+                '#type' => 'container',
+                '#attributes' => [
+                    'class' => ['inline-container-col5',],
                 ],
             ];
 
             $form['form-container']['curriculum']['subjects-container']
-            ['elective']['subjects-elective-container'][$electField]['subj_prerequi_2'] = [
-                '#type' => 'select',
-                '#title' => $this->t('Prerequisite 2'),
-                '#options' => $subj_opt,
+            ['elective']['subjects-elective-container'][$electField]['number-container']['lab_units'] = [
+                '#type' => 'number',
+                '#title' => $this->t('Laboratory Units'),
                 '#attributes' => [
-                'class' => ['flat-element', ],
+                    'placeholder' => 'Ex. 3',
+                    'class' => ['flat-input', ],
+                ],
+                '#min' => '0',
+                '#max' => '1000',
+            ];
+
+            $form['form-container']['curriculum']['subjects-container']
+            ['elective']['subjects-elective-container'][$electField]['number-container']['lec_units'] = [
+                '#type' => 'number',
+                '#title' => $this->t('Lecture Units'),
+                '#attributes' => [
+                    'placeholder' => 'Ex. 3',
+                    'class' => ['flat-input', ],
+                ],
+                '#min' => '0',
+                '#max' => '1000',
+            ];
+
+            $form['form-container']['curriculum']['subjects-container']
+            ['elective']['subjects-elective-container'][$electField]['number-container']['lab_hours'] = [
+                '#type' => 'number',
+                '#title' => $this->t('Laboratory Hours'),
+                '#attributes' => [
+                    'placeholder' => 'Ex. 3',
+                    'class' => ['flat-input', ],
+                ],
+                '#min' => '0',
+                '#max' => '1000',
+            ];
+
+            $form['form-container']['curriculum']['subjects-container']
+            ['elective']['subjects-elective-container'][$electField]['number-container']['lect_hours'] = [
+                '#type' => 'number',
+                '#title' => $this->t('Lecture Hours'),
+                '#attributes' => [
+                    'placeholder' => 'Ex. 3',
+                    'class' => ['flat-input', ],
+                ],
+                '#min' => '0',
+                '#max' => '1000',
+            ];
+
+            $form['form-container']['curriculum']['subjects-container']
+            ['elective']['subjects-elective-container'][$electField]['subj_prerequisite'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Pre-Requisite'),
+                '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
+                '#placeholder' => $this->t('Input subject code or description'),
+                '#attributes' => [
+                    'class' => ['flat-element', ],
+                ],
+            ];
+
+            $form['form-container']['curriculum']['subjects-container']
+            ['elective']['subjects-elective-container'][$electField]['subj_corequisite'] = [
+                '#type' => 'textfield',
+                '#title' => $this->t('Co-Requisite'),
+                '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
+                '#placeholder' => $this->t('Input subject code or description'),
+                '#attributes' => [
+                    'class' => ['flat-element', ],
                 ],
             ];
 
@@ -672,14 +785,14 @@ class RegisterCurriculumForm extends FormBase{
 
             foreach(self::$years as $year => $yearTitle){
             
-            foreach(self::$sems as $sem => $semTitle){
-        
-                $subjects = $form_state->getValue([
-                'form-container', 'curriculum', 'subjects-container', 
-                $year, $sem, $sem.'-container', $sem.'_subjects_container']);
+                foreach(self::$sems as $sem => $semTitle){
+            
+                    $subjects = $form_state->getValue([
+                    'form-container', 'curriculum', 'subjects-container', 
+                    $year, $sem, $sem.'-container', $sem.'_subjects_container']);
 
-                $curr_subjs[$year.$sem] = $subjects;
-            }
+                    $curr_subjs[$year.$sem] = $subjects;
+                }
         
             }
 

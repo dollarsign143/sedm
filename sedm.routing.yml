@@ -23,6 +23,15 @@ sedm.menu.curriculum.default.tab:
   requirements:
     _permission: 'access content'
 
+
+sedm.autocomplete.subjects:
+  path: '/sedm/menu/curriculum/autocomplete/subjects'
+  defaults:
+    _controller: '\Drupal\sedm\Controller\SubjectAutoCompleteController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
 sedm.menu.curriculum.default.tab.verify.curriculum.to.save.modal.form:
   path: '/sedm/menu/curriculum/tab/default/verify/to/save'
   defaults:

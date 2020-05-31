@@ -96,7 +96,8 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
       $curri_uid = $isCurriculumSaved;
 
       $isSubjectsInserted = $CDO->insertCurriculumSubjects($curri_uid, $curr_subjs);
-      if(isSubjectsInserted){
+      $isElectivesInserted = $CDO->insertCurriculumElectiveSubjects($curri_uid, $curr_subjs);
+      if($isSubjectsInserted && $isElectivesInserted){
         $modal_form['message'] = [
           '#type' => 'item',
           '#markup' => $this->t('Curriculum has been saved successfully!'),
@@ -111,7 +112,7 @@ class VerifyCurriculumToSaveModalForm extends FormBase {
 
     }
 
-    $command = new OpenModalDialogCommand($this->t('Sample'), $modal_form, ['width' => '50%']);
+    $command = new OpenModalDialogCommand($this->t('Save Curriculum'), $modal_form, ['width' => '50%']);
     $response->addCommand($command);
 
     return $response;
