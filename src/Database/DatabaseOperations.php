@@ -232,6 +232,27 @@ class DatabaseOperations {
 
     }
 
+    public function getSubjectByUID($subj_uid){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query("SELECT * 
+        FROM subjects 
+        WHERE subject_uid = :subj_uid",
+        [
+            ':subj_uid' => $subj_uid,
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+
+    }
+
     public function isSubjectAvailable($subject_desc = NULL, $subj_code = NULL, $subj_cat){
 
         if(empty($subject_desc)){

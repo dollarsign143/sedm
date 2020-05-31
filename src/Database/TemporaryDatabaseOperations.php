@@ -137,11 +137,12 @@ class TemporaryDatabaseOperations extends DatabaseOperations{
 
         try {
 
+            preg_match('/(?P<digit>\d+)/', $subj_info['subject_uid'], $subject_uid);
             $result = $connection->insert('students_subjects')
             ->fields([
                 'studSubj_uid' => NULL,
                 'student_uid' => $stud_uid,
-                'subject_uid' => $subj_info['subject_uid'],
+                'subject_uid' => $subject_uid[0],
                 'studSubj_remarks' => $subj_info['remarks'],
                 'studSubj_finalRemarks' => $subj_info['final_remarks'],
             ])
