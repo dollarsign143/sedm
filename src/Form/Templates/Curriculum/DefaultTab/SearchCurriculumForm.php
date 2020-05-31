@@ -268,6 +268,7 @@ class SearchCurriculumForm extends FormBase{
                         <td>NONE</td>
                         <td>NONE</td>
                         <td>NONE</td>
+                        <td>NONE</td>
                     </tr>';
                 }
                 else {
@@ -277,11 +278,12 @@ class SearchCurriculumForm extends FormBase{
                         $data .= '<tr>
                             <td>'.$key->subject_code.'</td>
                             <td>'.$key->subject_desc.'</td>
-                            <td>'.$key->curricSubj_labUnits.'</td>
                             <td>'.$key->curricSubj_lecUnits.'</td>
-                            <td>'.$key->curricSubj_labHours.'</td>
+                            <td>'.$key->curricSubj_labUnits.'</td>
                             <td>'.$key->curricSubj_lecHours.'</td>
-                            <td>'.$prerequi1[0]->subject_code.', '.$prerequi2[0]->subject_code.'</td>
+                            <td>'.$key->curricSubj_labHours.'</td>
+                            <td>'.$prerequi1[0]->subject_code.'</td>
+                            <td>'.$prerequi2[0]->subject_code.'</td>
                         </tr>';
                     }
                 }
@@ -295,11 +297,12 @@ class SearchCurriculumForm extends FormBase{
                             <tr>
                             <th>Code</th>
                             <th>Description</th>
-                            <th>Laboratory Units</th>
-                            <th>Lecture Units</th>
-                            <th>Laboratory Hours</th>
-                            <th>Lecture Hours</th>
-                            <th>Prerequisites</th>
+                            <th>Lect. Units</th>
+                            <th>Lab. Units</th>
+                            <th>Lect. Hours</th>
+                            <th>Lab. Hours</th>
+                            <th>Pre-Requisite</th>
+                            <th>Co-Requisite</th>
                             </tr>
                         </thead>
                         <tbody class="curriculumSubjectsBody">
@@ -332,6 +335,9 @@ class SearchCurriculumForm extends FormBase{
                 <td>NONE</td>
                 <td>NONE</td>
                 <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
             </tr>';
         }
         else {
@@ -341,9 +347,12 @@ class SearchCurriculumForm extends FormBase{
                 $electiveData .= '<tr>
                     <td>'.$key->subject_code.'</td>
                     <td>'.$key->subject_desc.'</td>
-                    <td>'.$key->curricSubj_labUnits.'</td>
-                    <td>'.$key->curricSubj_lecUnits.'</td>
-                    <td>'.$prerequi1[0]->subject_code.', '.$prerequi2[0]->subject_code.'</td>
+                    <td>'.$key->electiveSubj_lecUnits.'</td>
+                    <td>'.$key->electiveSubj_labUnits.'</td>
+                    <td>'.$key->electiveSubj_lecHours.'</td>
+                    <td>'.$key->electiveSubj_labHours.'</td>
+                    <td>'.$prerequi1[0]->subject_code.'</td>
+                    <td>'.$prerequi2[0]->subject_code.'</td>
                 </tr>';
             }
         }
@@ -355,11 +364,14 @@ class SearchCurriculumForm extends FormBase{
                 <table>
                 <thead>
                     <tr>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Laboratory Units</th>
-                    <th>Lecture Units</th>
-                    <th>Prerequisites</th>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>Lect. Units</th>
+                        <th>Lab. Units</th>
+                        <th>Lect. Hours</th>
+                        <th>Lab. Hours</th>
+                        <th>Pre-Requisite</th>
+                        <th>Co-Requisite</th>
                     </tr>
                 </thead>
                 <tbody class="curriculumElectiveSubjectsBody">

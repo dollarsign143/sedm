@@ -237,7 +237,7 @@ class RegisterCurriculumForm extends FormBase{
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
                     [$sem.'_subjects_container'][$subj_field]['subj_code_autoComplete'] = [
                         '#type' => 'textfield',
-                        '#title' => $this->t('Subject'),
+                        '#title' => $this->t('Subject '. $subj_field),
                         '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
                         '#placeholder' => $this->t('Input subject code or description'),
                         '#attributes' => [
@@ -264,9 +264,9 @@ class RegisterCurriculumForm extends FormBase{
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
-                    [$sem.'_subjects_container'][$subj_field]['number-container']['lab_units'] = [
+                    [$sem.'_subjects_container'][$subj_field]['number-container']['lec_units'] = [
                         '#type' => 'number',
-                        '#title' => $this->t('Laboratory Units'),
+                        '#title' => $this->t('Lect. Units'),
                         '#attributes' => [
                             'placeholder' => 'Ex. 3',
                             'class' => ['flat-input', ],
@@ -276,9 +276,21 @@ class RegisterCurriculumForm extends FormBase{
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
-                    [$sem.'_subjects_container'][$subj_field]['number-container']['lec_units'] = [
+                    [$sem.'_subjects_container'][$subj_field]['number-container']['lab_units'] = [
                         '#type' => 'number',
-                        '#title' => $this->t('Lecture Units'),
+                        '#title' => $this->t('Lab. Units'),
+                        '#attributes' => [
+                            'placeholder' => 'Ex. 3',
+                            'class' => ['flat-input', ],
+                        ],
+                        '#min' => '0',
+                        '#max' => '1000',
+                    ];
+
+                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
+                    [$sem.'_subjects_container'][$subj_field]['number-container']['lect_hours'] = [
+                        '#type' => 'number',
+                        '#title' => $this->t('Lect. Hours'),
                         '#attributes' => [
                             'placeholder' => 'Ex. 3',
                             'class' => ['flat-input', ],
@@ -289,26 +301,14 @@ class RegisterCurriculumForm extends FormBase{
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
                     [$sem.'_subjects_container'][$subj_field]['number-container']['lab_hours'] = [
-                    '#type' => 'number',
-                    '#title' => $this->t('Laboratory Hours'),
-                    '#attributes' => [
-                        'placeholder' => 'Ex. 3',
-                        'class' => ['flat-input', ],
-                    ],
-                    '#min' => '0',
-                    '#max' => '1000',
-                    ];
-
-                    $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
-                    [$sem.'_subjects_container'][$subj_field]['number-container']['lect_hours'] = [
-                    '#type' => 'number',
-                    '#title' => $this->t('Lecture Hours'),
-                    '#attributes' => [
-                        'placeholder' => 'Ex. 3',
-                        'class' => ['flat-input', ],
-                    ],
-                    '#min' => '0',
-                    '#max' => '1000',
+                        '#type' => 'number',
+                        '#title' => $this->t('Lab. Hours'),
+                        '#attributes' => [
+                            'placeholder' => 'Ex. 3',
+                            'class' => ['flat-input', ],
+                        ],
+                        '#min' => '0',
+                        '#max' => '1000',
                     ];
 
                     $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
@@ -342,15 +342,6 @@ class RegisterCurriculumForm extends FormBase{
                         ],
                     ];
 
-                    // $form['form-container']['curriculum']['subjects-container'][$year][$sem][$sem.'-container']
-                    // [$sem.'_subjects_container'][$subj_field]['subj_prerequi_2'] = [
-                    //     '#type' => 'select',
-                    //     '#title' => $this->t('Prerequisite 2'),
-                    //     '#options' => $subj_opt,
-                    //     '#attributes' => [
-                    //     'class' => ['flat-element', ],
-                    //     ],
-                    // ];
 
                     if(count($subj_fields) > 1){
 
@@ -460,9 +451,9 @@ class RegisterCurriculumForm extends FormBase{
             ];
 
             $form['form-container']['curriculum']['subjects-container']
-            ['elective']['subjects-elective-container'][$electField]['number-container']['lab_units'] = [
+            ['elective']['subjects-elective-container'][$electField]['number-container']['lec_units'] = [
                 '#type' => 'number',
-                '#title' => $this->t('Laboratory Units'),
+                '#title' => $this->t('Lect. Units'),
                 '#attributes' => [
                     'placeholder' => 'Ex. 3',
                     'class' => ['flat-input', ],
@@ -472,9 +463,9 @@ class RegisterCurriculumForm extends FormBase{
             ];
 
             $form['form-container']['curriculum']['subjects-container']
-            ['elective']['subjects-elective-container'][$electField]['number-container']['lec_units'] = [
+            ['elective']['subjects-elective-container'][$electField]['number-container']['lab_units'] = [
                 '#type' => 'number',
-                '#title' => $this->t('Lecture Units'),
+                '#title' => $this->t('Lab. Units'),
                 '#attributes' => [
                     'placeholder' => 'Ex. 3',
                     'class' => ['flat-input', ],
