@@ -65,41 +65,41 @@ class EnrollmentEvaluation extends FormBase {
             ],
         ];
 
-        $form['form-container']['student']['details-container']['select_container'] = [
-            '#type' => 'container',
-            '#attributes' => [
-                'class' => ['inline-container-col2',],
-            ],
-        ];
+        // $form['form-container']['student']['details-container']['select_container'] = [
+        //     '#type' => 'container',
+        //     '#attributes' => [
+        //         'class' => ['inline-container-col2',],
+        //     ],
+        // ];
 
-        $years = [
-            'first-year' => 'First Year',
-            'second-year' => 'Second Year',
-            'third-year' => 'Third Year',
-            'fourth-year' => 'Fourth Year'
-        ];
-        $form['form-container']['student']['details-container']['select_container']['yearLevel'] = [
-            '#type' => 'select',
-            '#title' => 'Year Level',
-            '#options' => $years,
-            '#attributes' => [
-                'class' => ['flat-element',],
-            ],
-        ];
+        // $years = [
+        //     'first-year' => 'First Year',
+        //     'second-year' => 'Second Year',
+        //     'third-year' => 'Third Year',
+        //     'fourth-year' => 'Fourth Year'
+        // ];
+        // $form['form-container']['student']['details-container']['select_container']['yearLevel'] = [
+        //     '#type' => 'select',
+        //     '#title' => 'Year Level',
+        //     '#options' => $years,
+        //     '#attributes' => [
+        //         'class' => ['flat-element',],
+        //     ],
+        // ];
 
-        $semesters = [
-            'first-sem' => 'First Semester',
-            'second-sem' => 'Second Semester',
-            'summer-sem' => 'Summer'
-        ];
-        $form['form-container']['student']['details-container']['select_container']['semester'] = [
-            '#type' => 'select',
-            '#title' => 'Select Semester',
-            '#options' => $semesters,
-            '#attributes' => [
-                'class' => ['flat-element',],
-            ],
-        ];
+        // $semesters = [
+        //     'first-sem' => 'First Semester',
+        //     'second-sem' => 'Second Semester',
+        //     'summer-sem' => 'Summer'
+        // ];
+        // $form['form-container']['student']['details-container']['select_container']['semester'] = [
+        //     '#type' => 'select',
+        //     '#title' => 'Select Semester',
+        //     '#options' => $semesters,
+        //     '#attributes' => [
+        //         'class' => ['flat-element',],
+        //     ],
+        // ];
 
         $form['form-container']['student']['details-container']['evaluate'] = [
             '#type' => 'submit',
@@ -145,8 +145,8 @@ class EnrollmentEvaluation extends FormBase {
         else{
 
             $info['id_number'] = $form_state->getValue(['form-container','student','details-container','idNumber']);
-            $info['year_level'] = $form_state->getValue(['form-container','student','details-container','select_container','yearLevel']);
-            $info['semester'] = $form_state->getValue(['form-container','student','details-container','select_container','semester']);
+            // $info['year_level'] = $form_state->getValue(['form-container','student','details-container','select_container','yearLevel']);
+            // $info['semester'] = $form_state->getValue(['form-container','student','details-container','select_container','semester']);
             
             $EDO = new EvaluationDatabaseOperations();
             $stud_info = $EDO->getStudentInfo($info['id_number']);
@@ -167,35 +167,65 @@ class EnrollmentEvaluation extends FormBase {
             else {
                 $curri_uid = $stud_info[0]->curriculum_uid;
                 $availableSubjects = $EDO->getAvailableSubjects($info, $curri_uid);
+                // var_dump($availableSubjects);
     
-                $data = NULL;
+                $available = "";
+                $nonAvailable = "";
                 if(empty($availableSubjects)){
-                    $data .= '<tr>
+                    $available .= '<tr>
+                        <td>NONE</td>
                         <td>NONE</td>
                         <td>NONE</td>
                         <td>NONE</td>
                         <td>NONE</td>
                         <td>NONE</td>
                     </tr>';
+                    $nonAvailable .= '<tr>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                        <td>NONE</td>
+                    </tr>';
+
                 }
                 else {
                     foreach($availableSubjects as $availableSubject => $key){
-                        if($key['prerequi1remarks'] == "INC" || $key['prerequi2remarks'] == "INC"){
-                            $data .= '<tr style="background-color: orange" >
+                        // var_dump($key);
+                        
+                        if($key['reason'] == "ISSUES"){
+
+                            $nonAvailable .= '<tr style="background-color: orange; font-weight: bold" >
                                 <td>'.$key['subj_code'].'</td>
                                 <td>'.$key['subj_description'].'</td>
                                 <td>'.$key['subj_units'].'</td>
-                                <td>'.$key['prerequi1'].', '.$key['prerequi2'].'</td>
-                                <td>INCOMPLETE</td>
+                                <td>Requisites Issue</td>
+                                <td>'.$key['prerequi1'].': '.$key['prerequi1remarks'].'</td>
+                                <td>'.$key['prerequi2'].': '.$key['prerequi2remarks'].'</td>
+                            </tr>';
+                          
+                        }
+                        elseif($key['reason'] == "OK" || $key['reason'] == "NOT_ENROLLED" ) {
+                            $available .= '<tr>
+                                <td>'.$key['subj_code'].'</td>
+                                <td>'.$key['subj_description'].'</td>
+                                <td>'.$key['subj_units'].'</td>
+                                <td>'.$key['subj_grade'].'</td>
+                                <td>Requisites Complied</td>
+                                <td>'.$key['prerequi1'].': '.$key['prerequi1remarks'].'</td>
+                                <td>'.$key['prerequi2'].': '.$key['prerequi2remarks'].'</td>
                             </tr>';
                         }
                         else {
-                            $data .= '<tr>
+                            $available .= '<tr>
                                 <td>'.$key['subj_code'].'</td>
                                 <td>'.$key['subj_description'].'</td>
                                 <td>'.$key['subj_units'].'</td>
-                                <td>'.$key['prerequi1'].', '.$key['prerequi2'].'</td>
-                                <td>OKAY</td>
+                                <td>'.$key['subj_grade'].'</td>
+                                <td>Re-Enroll; Requisites Complied</td>
+                                <td>'.$key['prerequi1'].': '.$key['prerequi1remarks'].'</td>
+                                <td>'.$key['prerequi2'].': '.$key['prerequi2remarks'].'</td>
                             </tr>';
                         }
 
@@ -319,12 +349,50 @@ class EnrollmentEvaluation extends FormBase {
                             <th>Code</th>
                             <th>Description</th>
                             <th>Units</th>
-                            <th>Prerequisites</th>
-                            <th>Prerequisite Status</th>
+                            <th>Grade</th>
+                            <th>Status</th>
+                            <th>Pre-Requisite</th>
+                            <th>Co-Requisite</th>
                             </tr>
                         </thead>
                         <tbody class="subjectsAvailableBody">
-                        '.$data.'
+                        '.$available.'
+                        </tbody>
+                        </table>
+                    </div>'),
+                ];
+
+                $form['form-container']
+                ['subject-table-container']['subjectsNonAvailable'] = [
+                    '#type' => 'details',
+                    '#title' => $this->t('Non-Available Subjects'),
+                    '#open' => TRUE,
+                ];
+    
+                $form['form-container']
+                ['subject-table-container']['subjectsNonAvailable']['description'] = [
+                    '#type' => 'item',
+                    '#markup' => $this->t('The subjects listed below have issues and not advisable to enroll.'),
+                ];
+
+                $form['form-container']
+                ['subject-table-container']['subjectsNonAvailable']['table'] = [
+                    '#type' => 'markup',
+                    '#markup' => $this->t('
+                    <div>
+                        <table>
+                        <thead>
+                            <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Units</th>
+                            <th>Status</th>
+                            <th>Pre-Requisite</th>
+                            <th>Co-Requisite</th>
+                            </tr>
+                        </thead>
+                        <tbody class="subjectsNonAvailableBody">
+                        '.$nonAvailable.'
                         </tbody>
                         </table>
                     </div>'),

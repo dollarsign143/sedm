@@ -88,6 +88,34 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
         
     }
 
+    public function getSubjectsByKeyword($keyword){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        /**
+         * Example Query
+         * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+         *      ':created' => REQUEST_TIME - 3600,
+         *    ]);
+         */
+
+        $query = $connection->query("SELECT * 
+        FROM subjects
+        WHERE subject_desc LIKE :keyword
+        OR subject_code LIKE :keyword", [
+            ':keyword' => '%'.$keyword.'%'
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+        
+    }
+
     public function getSubjectCategory($subj_cat_uid){
 
         //setting up test_drupal_data database into active connection
@@ -184,13 +212,18 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                     
                     // loop through the array and save all the infos in database
                     for($i = 1; $i <= count($curri_subj); $i++){
-                        $subj_code = $curri_subj[$i]['subj_code'];
+                        // Perform a regular expression match
+                        preg_match('/(?P<digit>\d+)/', $curri_subj[$i]['subj_code_autoComplete'], $subj_code);
+                        preg_match('/(?P<digit>\d+)/', $curri_subj[$i]['subj_prerequisite'], $subj_prerequi1);
+                        preg_match('/(?P<digit>\d+)/', $curri_subj[$i]['subj_corequisite'], $subj_prerequi2);
+
+                        // $subj_code = substr($curri_subj[$i]['subj_code_autoComplete'], 0, 1);
                         $subj_labUnits = $curri_subj[$i]['number-container']['lab_units'];
                         $subj_lecUnits = $curri_subj[$i]['number-container']['lec_units'];
                         $subj_labHours = $curri_subj[$i]['number-container']['lab_hours'];
                         $subj_lecHours = $curri_subj[$i]['number-container']['lect_hours'];
-                        $subj_prerequi1 = $curri_subj[$i]['subj_prerequi_1'];
-                        $subj_prerequi2 = $curri_subj[$i]['subj_prerequi_2'];
+                        // $subj_prerequi1 = substr($curri_subj[$i]['subj_prerequisite'], 0, 1);
+                        // $subj_prerequi2 = substr($curri_subj[$i]['subj_corequisite'], 0, 1);
                         
                         // curriculum_subjects attributes:
                         // curricSubj_uid	int(11) Auto Increment	
@@ -205,18 +238,18 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                         // curricSubj_year	varchar(40) NULL	
                         // curricSubj_sem	varchar(40) NULL
 
-                        if($subj_code != 'none'){
+                        if(!empty($subj_code)){
                             $insertedSubjUID = $connection->insert('curriculum_subjects')
                             ->fields([
                                 'curricSubj_uid' => NULL,
                                 'curriculum_uid' => $curri_uid,
-                                'subject_uid' => $subj_code,
-                                'curricSubj_prerequisite1' => $subj_prerequi1,
-                                'curricSubj_prerequisite2' => $subj_prerequi2,
-                                'curricSubj_labUnits' => $subj_labUnits,
-                                'curricSubj_lecUnits' => $subj_lecUnits,
-                                'curricSubj_labHours' => $subj_labHours,
-                                'curricSubj_lecHours' => $subj_lecHours,
+                                'subject_uid' => $subj_code[0],
+                                'curricSubj_prerequisite1' => empty($subj_prerequi1[0]) ? 'none' : $subj_prerequi1[0],
+                                'curricSubj_prerequisite2' => empty($subj_prerequi2[0]) ? 'none' : $subj_prerequi2[0],
+                                'curricSubj_labUnits' => empty($subj_labUnits) ? 0 : $subj_labUnits,
+                                'curricSubj_lecUnits' => empty($subj_lecUnits) ? 0 : $subj_lecUnits,
+                                'curricSubj_labHours' => empty($subj_labHours) ? 0 : $subj_labHours,
+                                'curricSubj_lecHours' => empty($subj_lecHours) ? 0 : $subj_lecHours,
                                 'curricSubj_year' => $year,
                                 'curricSubj_sem' => $sem,
                             ])
@@ -229,32 +262,72 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
         
             }
 
+
+            return true;
+        } catch (DatabaseExceptionWrapper $e) {
+            \Drupal::logger('type')->error($e->getMessage());
+            $transaction->rollBack();
+            return false;
+        }
+
+    }
+
+    public function insertCurriculumElectiveSubjects($curri_uid, $curr_subjs){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+        $transaction = $connection->startTransaction();
+
+        try {
+            
+            // Parsing the data structure of created curriculum
             // get the elective subjects
             $elect_subjs = $curr_subjs['electives'];
 
             // loop through the array and save the elective subject infos in database
             for($i = 1; $i < count($elect_subjs); $i++){
-                $elec_subj_code = $elect_subjs[$i]['subj_code'];
-                $elec_subj_prerequi1 = $elect_subjs[$i]['subj_prerequi_1'];
-                $elec_subj_prerequi2 = $elect_subjs[$i]['subj_prerequi_2'];
 
-                // curriculum_electives attributes:
+                // Perform a regular expression match
+                preg_match('/(?P<digit>\d+)/', $elect_subjs[$i]['subj_code_autoComplete'], $elec_subj_code);
+                preg_match('/(?P<digit>\d+)/', $elect_subjs[$i]['subj_prerequisite'], $elec_subj_prerequi1);
+                preg_match('/(?P<digit>\d+)/', $elect_subjs[$i]['subj_corequisite'], $elec_subj_prerequi2);
+                // $elec_subj_code = substr($elect_subjs[$i]['subj_code_autoComplete'], 0, 1);
+                $elect_subj_labUnits = $elect_subjs[$i]['number-container']['lab_units'];
+                $elect_subj_lecUnits = $elect_subjs[$i]['number-container']['lec_units'];
+                $elect_subj_labHours = $elect_subjs[$i]['number-container']['lab_hours'];
+                $elect_subj_lecHours = $elect_subjs[$i]['number-container']['lect_hours'];
+                // $elec_subj_prerequi1 = substr($elect_subjs[$i]['subj_prerequisite'], 0, 1);
+                // $elec_subj_prerequi2 = substr($elect_subjs[$i]['subj_corequisite'], 0, 1);
+
                 // curricElect_uid	int(11) Auto Increment	
                 // curriculum_uid	int(11) NULL	
                 // electiveSubj_uid	int(11) NULL	
+                // electiveSubj_labUnits	int(11) NULL	
+                // electiveSubj_lecUnits	int(11) NULL	
+                // electiveSubj_labHours	int(11) NULL	
+                // electiveSubj_lecHours	int(11) NULL	
                 // electiveSubj_prerequisite1	varchar(40) NULL	
-                // electiveSubj_prerequisite2	varchar(40) NULL
+                // electiveSubj_prerequisite2	varchar(40) NULL	
 
-                if($elec_subj_code != 'none'){
+                if(!empty($elec_subj_code)){
                     $insertedElectiveSubjUID = $connection->insert('curriculum_electives')
                     ->fields([
                         'curricElect_uid' => NULL,
                         'curriculum_uid' => $curri_uid,
-                        'electiveSubj_uid' => $elec_subj_code,
-                        'electiveSubj_prerequisite1' => $elec_subj_prerequi1,
-                        'electiveSubj_prerequisite2' => $elec_subj_prerequi2,
+                        'electiveSubj_uid' => $elec_subj_code[0],
+                        'electiveSubj_labUnits' => empty($elect_subj_labUnits) ? 0 : $elect_subj_labUnits,
+                        'electiveSubj_lecUnits' => empty($elect_subj_lecUnits) ? 0 : $elect_subj_lecUnits,
+                        'electiveSubj_labHours' => empty($elect_subj_labHours) ? 0 : $elect_subj_labHours,
+                        'electiveSubj_lecHours' => empty($elect_subj_lecHours) ? 0 : $elect_subj_lecHours,
+                        'electiveSubj_prerequisite1' => empty($elec_subj_prerequi1[0]) ? 'none' : $elec_subj_prerequi1[0],
+                        'electiveSubj_prerequisite2' => empty($elec_subj_prerequi2[0]) ? 'none' : $elec_subj_prerequi2[0],
                     ])
                     ->execute();
+                    
+                    if(empty($insertedElectiveSubjUID)){
+
+                    }
                 }
 
             }

@@ -173,6 +173,36 @@ class DatabaseOperations {
 
     }
 
+    public function getSubjectByDesc($subj_desc, $subj_cat = NULL){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        if($subj_cat == NULL){
+            $query = $connection->query("SELECT * FROM subjects 
+            WHERE subject_desc = :subj_desc",
+            [
+                ':subj_desc' => $subj_desc,
+            ]);
+        }
+        else {
+            $query = $connection->query("SELECT * FROM subjects 
+            WHERE subject_desc = :subj_desc AND subjCat_uid = :subj_cat ",
+            [
+                ':subj_desc' => $subj_desc,
+                ':subj_cat' => $subj_cat,
+            ]);
+        }
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+
+    }
+
     public function getSubjectByCode($subj_code, $subj_cat = NULL){
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');
@@ -180,13 +210,13 @@ class DatabaseOperations {
         $connection = Database::getConnection();
 
         if($subj_cat == NULL){
-            $query = $connection->query("SELECT * FROM {subjects} WHERE subject_code = :subj_code",
+            $query = $connection->query("SELECT * FROM subjects WHERE subject_code = :subj_code",
             [
                 ':subj_code' => $subj_code,
             ]);
         }
         else {
-            $query = $connection->query("SELECT * FROM {subjects} 
+            $query = $connection->query("SELECT * FROM subjects 
             WHERE subject_code = :subj_code AND subjCat_uid = :subj_cat ",
             [
                 ':subj_code' => $subj_code,
@@ -202,10 +232,18 @@ class DatabaseOperations {
 
     }
 
-    public function isSubjectAvailable($subj_code, $subj_cat){
+    public function isSubjectAvailable($subject_desc = NULL, $subj_code = NULL, $subj_cat){
 
-        $result = $this->getSubjectByCode($subj_code, $subj_cat);
-        return ($result == NULL) ? true : false;
+        if(empty($subject_desc)){
+            $result = $this->getSubjectByCode($subj_code, $subj_cat);
+            return empty($result) ? true : false;
+        }
+        else {
+            $result = $this->getSubjectByDesc($subject_desc, $subj_cat);
+            return empty($result) ? true : false;
+        }
+        
+        
         
     }
 

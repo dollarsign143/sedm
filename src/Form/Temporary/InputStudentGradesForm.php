@@ -76,7 +76,7 @@ class InputStudentGradesForm extends FormBase {
         $form['form-container']['subject-info']['final-remarks'] = [
             '#type' => 'textfield',
             '#title' => $this->t('Final Remarks'),
-            '#required' => TRUE,
+            // '#required' => TRUE,
             '#attributes' => [
                 'class' => ['flat-input',],
             ],

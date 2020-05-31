@@ -151,16 +151,17 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
         // Algorithm:
         // #1: get the curriculum subjects of a certain year level and semester
-        $curri_subjs = $this->getCurriculumSubjects($curri_uid, $data['year_level'], $data['semester']);
+        // $curri_subjs = $this->getCurriculumSubjects($curri_uid, $data['year_level'], $data['semester']);
+        $curri_subjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
         // #2: for each subjects fetched will proceed to a 3 layer checking
         foreach($curri_subjs as $curri_subj){
-            // #2.1: checking the subject using its code
+            // #2.1: checking the subject using its description
             
-            $enrolledSubjInfo = $this->getEnrolledSubjectInfoByCode($data['id_number'], $curri_subj->subject_code);;
+            $enrolledSubjInfo = $this->getEnrolledSubjectInfoByDesc($data['id_number'], $curri_subj->subject_desc);
             // 2.1.1: if the subject is not found, proceed to checking the subject by description
             if(empty($enrolledSubjInfo)){
-                // #2.2: checking the subject using its description
-                $enrolledSubjInfo = $this->getEnrolledSubjectInfoByDesc($data['id_number'], $curri_subj->subject_desc);
+                // #2.2: checking the subject using its code
+                $enrolledSubjInfo = $this->getEnrolledSubjectInfoByCode($data['id_number'], $curri_subj->subject_code);
                 // #2.2.1: if the subject is not found.. proceed to the next checking the prerequisite satifactory
                 if(empty($enrolledSubjInfo)){ 
                     // #2.3: check the prerequisite 1 satisfactory
@@ -173,10 +174,25 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
+                            'subj_grade' => NULL,
                             'prerequi1remarks' => $isPrereque1Satisfied['remarks'],
                             'prerequi2remarks' => $isPrereque2Satisfied['remarks'],
                             'prerequi1' => $isPrereque1Satisfied['subject_code'],
                             'prerequi2' => $isPrereque2Satisfied['subject_code'],
+                            'reason' => 'OK'
+                        ];
+                    }
+                    else {
+                        $availableSubjs[$curri_subj->subject_uid] = [
+                            'subj_code' => $curri_subj->subject_code,
+                            'subj_description' => $curri_subj->subject_desc,
+                            'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
+                            'subj_grade' => NULL,
+                            'prerequi1remarks' => $isPrereque1Satisfied['remarks'],
+                            'prerequi2remarks' => $isPrereque2Satisfied['remarks'],
+                            'prerequi1' => $isPrereque1Satisfied['subject_code'],
+                            'prerequi2' => $isPrereque2Satisfied['subject_code'],
+                            'reason' => 'ISSUES'
                         ];
                     }
                 }
@@ -186,15 +202,20 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     $isEnrolledSubjectRemarksSatisfied = $this->isSubjectRemarksSatisfied($enrolledSubjInfo);
                     // #2.2.4: if the enrolled subject's remarks are not satisfied. the subject will be added
                     // to the available subjects
-                    if(!$isEnrolledSubjectRemarksSatisfied){ 
+                    if(!$isEnrolledSubjectRemarksSatisfied['isSatisfied']){
+
+                        $isPrereque1Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite1);
+                        $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2); 
                         $availableSubjs[$curri_subj->subject_uid] = [
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
-                            'prerequi1remarks' => NULL,
-                            'prerequi2remarks' => NULL,
+                            'subj_grade' => $isEnrolledSubjectRemarksSatisfied['remarks'],
+                            'prerequi1remarks' => $isPrereque1Satisfied['remarks'],
+                            'prerequi2remarks' =>$isPrereque2Satisfied['remarks'],
                             'prerequi1' => $isPrereque1Satisfied['subject_code'],
                             'prerequi2' => $isPrereque2Satisfied['subject_code'],
+                            'reason' => $isEnrolledSubjectRemarksSatisfied['reason']
                         ];
                     }
                 }
@@ -206,17 +227,23 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                 // #2.1.4: if the enrolled subject's remarks are not satisfied. the subject will be added
                 // to the available subjects
                 
-                $logger->error($isEnrolledSubjectRemarksSatisfied);
+                // $logger->error($isEnrolledSubjectRemarksSatisfied['isSatisfied']);
 
-                if(!$isEnrolledSubjectRemarksSatisfied){ 
+                if(!$isEnrolledSubjectRemarksSatisfied['isSatisfied']){ 
+                    
+                    $isPrereque1Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite1);
+                    $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2); 
+                    
                     $availableSubjs[$curri_subj->subject_uid] = [
                         'subj_code' => $curri_subj->subject_code,
                         'subj_description' => $curri_subj->subject_desc,
                         'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
-                        'prerequi1remarks' => NULL,
-                        'prerequi2remarks' => NULL,
+                        'subj_grade' => $isEnrolledSubjectRemarksSatisfied['remarks'],
+                        'prerequi1remarks' => $isPrereque1Satisfied['remarks'],
+                        'prerequi2remarks' =>$isPrereque2Satisfied['remarks'],
                         'prerequi1' => $isPrereque1Satisfied['subject_code'],
                         'prerequi2' => $isPrereque2Satisfied['subject_code'],
+                        'reason' => $isEnrolledSubjectRemarksSatisfied['reason']
                     ];
                 }
             }
@@ -245,6 +272,31 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
             ':curr_uid' => $curr_uid,
             ':year_level' => $year_level,
             ':semester' => $sem
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+
+    }
+
+    public function getCurriculumSubjectsByCurriUID($curr_uid){
+
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query('SELECT * 
+        FROM curriculum_subjects,subjects
+        WHERE subjects.subject_uid = curriculum_subjects.subject_uid
+        AND subjects.subject_isActive = :isActive
+        AND curriculum_subjects.curriculum_uid = :curr_uid',
+        [
+            ':isActive' => 'active',
+            ':curr_uid' => $curr_uid,
         ]);
 
         $result = $query->fetchAll();
@@ -311,7 +363,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
         if($preRequi_uid == "none"){
             $status = [
-                "subject_code" => NULL,
+                "subject_code" => 'None',
                 "remarks" => NULL,
                 "isSatisfied" => true,
             ];
@@ -320,47 +372,119 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         else {
             $stud_info = $this->getStudentInfo($stud_id);
             $remarks = $this->getStudSubjectRemarks($stud_info[0]->student_uid, $preRequi_uid);
-            $isSatisfied = $this->isSubjectRemarksSatisfied($remarks);
-            $status = [
-                "subject_code" => $remarks[0]->subject_code,
-                "remarks" => $remarks[0]->studSubj_remarks,
-                "isSatisfied" => $isSatisfied,
-            ];
-            return $status; 
+            if(empty($remarks)){
+                $status = [
+                    "subject_code" => "",
+                    "remarks" => "",
+                    "isSatisfied" => false,
+                ];
+                return $status;
+            }
+            else {
+                $isSatisfied = $this->isSubjectRemarksSatisfied($remarks);
+                $status = [
+                    "subject_code" => $remarks[0]->subject_code,
+                    "remarks" => $remarks[0]->studSubj_remarks,
+                    "isSatisfied" => $isSatisfied['isSatisfied'],
+                ];
+                return $status;
+            }
+ 
         }
 
     }
 
     public function isSubjectRemarksSatisfied($subject){
     
-        if(empty($subject)){
-            return false;
-        }
-        else {
-            if($subject[0]->studSubj_remarks == 'INC' ||
-             empty($subject[0]->studSubj_remarks)){
+        $response = [];
 
-                if($subject[0]->studSubj_finalRemarks == 'INC' || 
-                $subject[0]->studSubj_finalRemarks == 'DRP' || 
-                $subject[0]->studSubj_finalRemarks == 'DROP' || 
-                $subject[0]->studSubj_finalRemarks > 3 || 
-                empty($subject)){
-                    return false;
-                }
-                else {
-                    return true;
-                }
+        if($subject[0]->studSubj_remarks == 'PASSED'){
+            $response = [
+                'isSatisfied' => true,
+                'remarks' => $subject[0]->studSubj_remarks
+            ];
+            return $response;
+        }
+        elseif(empty($subject[0]->studSubj_remarks)){
+
+            if($subject[0]->studSubj_finalRemarks == 'INC' || 
+            $subject[0]->studSubj_finalRemarks == 'DRP' || 
+            $subject[0]->studSubj_finalRemarks == 'DROP' || 
+            $subject[0]->studSubj_finalRemarks > 3 || 
+            $subject[0]->studSubj_finalRemarks == 'FAILED'){
+                $response = [
+                    'isSatisfied' => false,
+                    'reason' => 'FAILED',
+                    'remarks' => $subject[0]->studSubj_finalRemarks
+                ];
+                return $response;
             }
-            elseif ($subject[0]->studSubj_remarks == 'DRP' || 
-            $subject[0]->studSubj_remarks == 'DROP' || 
-            $subject[0]->studSubj_remarks > 3) {
-                return false;
+            elseif(empty($subject[0]->studSubj_finalRemarks)){
+                $response = [
+                    'isSatisfied' => false,
+                    'reason' => 'NOT_ENROLLED',
+                    'remarks' => $subject[0]->studSubj_remarks
+                ];
+                return $response;
             }
             else {
-                return true;
+                $response = [
+                    'isSatisfied' => true,
+                    'remarks' => $subject[0]->studSubj_finalRemarks
+                ];
+                return $response;
             }
-
         }
+        elseif($subject[0]->studSubj_remarks == 'INC'){
+
+            if($subject[0]->studSubj_finalRemarks == 'INC' || 
+            $subject[0]->studSubj_finalRemarks == 'DRP' || 
+            $subject[0]->studSubj_finalRemarks == 'DROP' || 
+            $subject[0]->studSubj_finalRemarks > 3 || 
+            $subject[0]->studSubj_finalRemarks == 'FAILED'){
+                $response = [
+                    'isSatisfied' => false,
+                    'reason' => 'FAILED',
+                    'remarks' => $subject[0]->studSubj_finalRemarks
+                ];
+                return $response;
+            }
+            elseif(empty($subject[0]->studSubj_finalRemarks)){
+                $response = [
+                    'isSatisfied' => false,
+                    'reason' => 'INCOMPLETE',
+                    'remarks' => $subject[0]->studSubj_remarks
+                ];
+                return $response;
+            }
+            else {
+                $response = [
+                    'isSatisfied' => true,
+                    'remarks' => $subject[0]->studSubj_finalRemarks
+                ];
+                return $response;
+            }
+        }
+        elseif ($subject[0]->studSubj_remarks == 'DRP' || 
+        $subject[0]->studSubj_remarks == 'DROP' || 
+        $subject[0]->studSubj_remarks > 3 ||
+        $subject[0]->studSubj_remarks == 'FAILED') {
+            $response = [
+                'isSatisfied' => false,
+                'reason' => 'FAILED',
+                'remarks' => $subject[0]->studSubj_remarks
+
+            ];
+            return $response;
+        }
+        else {
+            $response = [
+                'isSatisfied' => true,
+                'remarks' => $subject[0]->studSubj_remarks
+            ];
+            return $response;
+        }
+
         
     }
 
