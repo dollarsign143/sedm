@@ -27,7 +27,7 @@ class VerifySubjectModalForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $subject = array()) {
 
-    
+    $subject = $_SESSION['sedm']['subject'];
     $form['#tree'] = TRUE;
     $form['modal-form-container'] = [
         '#type' => 'container',
