@@ -38,8 +38,11 @@ class VerifyInsertSubjectGradeModalForm extends FormBase {
             '#suffix' => $this->t('</div>'),
         ];
 
+        $subj_info = $_SESSION['sedm']['temp_subj_info'];
+        preg_match('/(?P<digit>\d+)/', $subj_info['subject_uid'], $subject_uid);
+        
         $TDO = new TemporaryDatabaseOperations();
-        $subject_info = $TDO->getSubjectInfo($stud_info['subject_uid']);
+        $subject_info = $TDO->getSubjectInfo($subject_uid[0]);
 
         $form['form-container']['subject_description'] = [
           '#type' => 'textfield',
@@ -129,7 +132,7 @@ class VerifyInsertSubjectGradeModalForm extends FormBase {
         $isSubjectAlreadyHaveGrade = $TDO->checkSubjectOnStudentSubjects($stud_info[0]->student_uid, $subj_info['subject_uid']);
 
         if($isSubjectAlreadyHaveGrade){
-          $logger->info('subject has no grade');
+          $logger->info('subject has grade');
             $content['message'] = [
               '#type' => 'item',
               '#markup' => $this->t('ERROR! Failed to insert the grade. Please check the error logs!'),

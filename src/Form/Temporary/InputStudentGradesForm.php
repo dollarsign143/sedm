@@ -55,12 +55,12 @@ class InputStudentGradesForm extends FormBase {
 
         $subject_opt = $this->buildSubjectOptData();
         $form['form-container']['subject-info']['subject'] = [
-            '#type' => 'select',
-            '#title' => $this->t('Gender'),
-            '#required' => TRUE,
-            '#options' => $subject_opt,
+            '#type' => 'textfield',
+            '#title' => $this->t('Subject'),
+            '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
+            '#placeholder' => $this->t('Input subject code or description'),
             '#attributes' => [
-                'class' => ['flat-input',],
+                'class' => ['flat-element', ],
             ],
         ];
 

@@ -151,8 +151,26 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
         // Algorithm:
         // #1: get the curriculum subjects of a certain year level and semester
-        // $curri_subjs = $this->getCurriculumSubjects($curri_uid, $data['year_level'], $data['semester']);
-        $curri_subjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
+        $curri_subjs = $this->getCurriculumSubjects($curri_uid, $data['year_level'], $data['semester']);
+        // $curri_subjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
+        $regularSubjs = $this->filterSubjects($data, $curri_subjs);
+
+        $allSubjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
+        $alternativeSubjs = array_diff(array_map('json_encode', $allSubjs), array_map('json_encode', $curri_subjs));
+
+        // Json decode the result
+        $alternativeSubjs = array_map('json_decode', $alternativeSubjs);
+        $filteredAlternativeSubjs = $this->filterSubjects($data, $alternativeSubjs);
+        // var_dump($filteredAlternativeSubjs);
+
+        $availableSubjs['regularSubjs'] = $regularSubjs;
+        $availableSubjs['alternativeSubjs'] = $filteredAlternativeSubjs;
+
+        return $availableSubjs;
+    }
+
+    protected function filterSubjects($data, $curri_subjs){
+        $subjects = array();
         // #2: for each subjects fetched will proceed to a 3 layer checking
         foreach($curri_subjs as $curri_subj){
             // #2.1: checking the subject using its description
@@ -170,7 +188,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2);
                     // #2.5: if the prerequisites are satisfied the subject will be included to the available subjects for student
                     if($isPrereque1Satisfied['isSatisfied'] && $isPrereque2Satisfied['isSatisfied']){
-                        $availableSubjs[$curri_subj->subject_uid] = [
+                        $subjects[$curri_subj->subject_uid] = [
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
@@ -183,7 +201,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                         ];
                     }
                     else {
-                        $availableSubjs[$curri_subj->subject_uid] = [
+                        $subjects[$curri_subj->subject_uid] = [
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
@@ -206,7 +224,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
                         $isPrereque1Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite1);
                         $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2); 
-                        $availableSubjs[$curri_subj->subject_uid] = [
+                        $subjects[$curri_subj->subject_uid] = [
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
@@ -234,7 +252,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     $isPrereque1Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite1);
                     $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2); 
                     
-                    $availableSubjs[$curri_subj->subject_uid] = [
+                    $subjects[$curri_subj->subject_uid] = [
                         'subj_code' => $curri_subj->subject_code,
                         'subj_description' => $curri_subj->subject_desc,
                         'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
@@ -250,7 +268,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
         }
 
-        return $availableSubjs;
+        return $subjects;
     }
 
     public function getCurriculumSubjects($curr_uid, $year_level, $sem){
@@ -373,12 +391,15 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
             $stud_info = $this->getStudentInfo($stud_id);
             $remarks = $this->getStudSubjectRemarks($stud_info[0]->student_uid, $preRequi_uid);
             if(empty($remarks)){
+                $subject = $this->getSubjectByUID($preRequi_uid);
+                
                 $status = [
-                    "subject_code" => "",
+                    "subject_code" => $subject[0]->subject_code,
                     "remarks" => "",
                     "isSatisfied" => false,
                 ];
                 return $status;
+                
             }
             else {
                 $isSatisfied = $this->isSubjectRemarksSatisfied($remarks);
