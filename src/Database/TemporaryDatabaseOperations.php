@@ -111,6 +111,48 @@ class TemporaryDatabaseOperations extends DatabaseOperations{
 
     }
 
+    public function updateStudentSubjectGrade($subj_info, $stud_uid){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+        $transaction = $connection->startTransaction();
+        /**
+         * Example Query
+        * $query = $database->query("SELECT id, example FROM {mytable} WHERE created > :created", [
+        *      ':created' => REQUEST_TIME - 3600,
+        *    ]);
+        */
+
+        /**
+         * Subject table entities
+         */
+        // studSubj_uid	int(11) Auto Increment	
+        // student_uid	int(11)	
+        // subject_uid	int(11)	
+        // studSubj_remarks	varchar(25)	
+        // studSubj_finalRemarks	varchar(25)
+
+        try {
+
+            preg_match('/(?P<digit>\d+)/', $subj_info['subject_uid'], $subject_uid);
+            $result = $connection->update('students_subjects')
+            ->fields([
+                'studSubj_remarks' => $subj_info['remarks'],
+                'studSubj_finalRemarks' => $subj_info['final_remarks'],
+            ])
+            ->condition('student_uid',$stud_uid, '=')
+            ->condition('subject_uid', $subject_uid[0], '=')
+            ->execute();
+    
+            return true;
+
+        } catch (Exception $e) {
+            \Drupal::logger('type')->error($e->getMessage());
+            return false;
+        }
+    }
+
     public function insertStudentSubjectGrade($subj_info, $stud_uid){
         //setting up test_drupal_data database into active connection
         Database::setActiveConnection('test_drupal_data');

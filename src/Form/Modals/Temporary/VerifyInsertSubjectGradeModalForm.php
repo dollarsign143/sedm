@@ -132,12 +132,22 @@ class VerifyInsertSubjectGradeModalForm extends FormBase {
         $isSubjectAlreadyHaveGrade = $TDO->checkSubjectOnStudentSubjects($stud_info[0]->student_uid, $subj_info['subject_uid']);
 
         if($isSubjectAlreadyHaveGrade){
-          $logger->info('subject has grade');
-            $content['message'] = [
-              '#type' => 'item',
-              '#markup' => $this->t('ERROR! Failed to insert the grade. Please check the error logs!'),
-            ];
-            unset($_SESSION['sedm']['temp_subj_info']);
+            $logger->info('subject has grade');
+            $result = $TDO->updateStudentSubjectGrade($subj_info, $stud_info[0]->student_uid);
+            if($result){
+              $content['message'] = [
+                '#type' => 'item',
+                '#markup' => $this->t('Subject grade has been updated successfully!'),
+              ];
+              unset($_SESSION['sedm']['temp_subj_info']);
+            }
+            else {
+              $content['message'] = [
+                '#type' => 'item',
+                '#markup' => $this->t('ERROR! Failed to insert the grade. Please check the error logs!'),
+              ];
+              unset($_SESSION['sedm']['temp_subj_info']);
+            }
         }
         else {
             
