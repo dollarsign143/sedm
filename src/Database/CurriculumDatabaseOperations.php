@@ -146,13 +146,12 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
         $connection = Database::getConnection();
         $transaction = $connection->startTransaction();
 
-        // curriculum table fields:
         // curriculum_uid	int(11) Auto Increment	
         // curriculum_no	varchar(40) NULL	
         // curriculum_isLock	varchar(40) NULL	
         // curriculum_yearCreated	varchar(40) NULL	
         // curriculum_schoolYearCreated	varchar(40) NULL	
-        // curriculum_semCreated	varchar(40) NULL	
+        // curriculum_basis	varchar(60) NULL	
         // program_uid	int(11) NULL
         try {
             $resultCurriUID = $connection->insert('curriculums')
@@ -162,6 +161,7 @@ class CurriculumDatabaseOperations extends DatabaseOperations {
                 'curriculum_isLock' => $isLock,
                 'curriculum_yearCreated' => $curri_info['curr_yearCreated'],
                 'curriculum_schoolYearCreated' => $curri_info['curr_schoolYear'],
+                'curriculum_basis' => $curri_info['curr_basis'],
                 'program_uid' => $curri_info['curr_program'],
             ])
             ->execute(); 

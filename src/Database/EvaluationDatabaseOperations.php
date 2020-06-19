@@ -164,6 +164,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         // var_dump($filteredAlternativeSubjs);
 
         $availableSubjs['regularSubjs'] = $regularSubjs;
+        $availableSubjs['regularSubjs']['totalMaxUnits'] = $this->sumUnits($curri_subjs);
         $availableSubjs['alternativeSubjs'] = $filteredAlternativeSubjs;
 
         return $availableSubjs;
@@ -269,6 +270,15 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         }
 
         return $subjects;
+    }
+
+    protected function sumUnits($subjects){
+        $totalUnits = 0;
+        foreach($subjects as $subject){
+            $totalUnits += $subject->curricSubj_labUnits + $subject->curricSubj_lecUnits;
+        }
+
+        return $totalUnits;
     }
 
     public function getCurriculumSubjects($curr_uid, $year_level, $sem){
@@ -395,7 +405,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                 
                 $status = [
                     "subject_code" => $subject[0]->subject_code,
-                    "remarks" => "",
+                    "remarks" => NULL,
                     "isSatisfied" => false,
                 ];
                 return $status;
@@ -405,7 +415,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                 $isSatisfied = $this->isSubjectRemarksSatisfied($remarks);
                 $status = [
                     "subject_code" => $remarks[0]->subject_code,
-                    "remarks" => $remarks[0]->studSubj_remarks,
+                    "remarks" => $isSatisfied['remarks'],
                     "isSatisfied" => $isSatisfied['isSatisfied'],
                 ];
                 return $status;
@@ -509,7 +519,6 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         
     }
 
-    // 
 
     public function getCurriculumSubjectsByCategory($curri_uid, $subj_cat){
         //setting up test_drupal_data database into active connection

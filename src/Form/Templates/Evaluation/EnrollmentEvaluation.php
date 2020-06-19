@@ -10,6 +10,8 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelTrait;
 
 use Drupal\sedm\Database\EvaluationDatabaseOperations;
@@ -169,115 +171,10 @@ class EnrollmentEvaluation extends FormBase {
                 $availableSubjects = $EDO->getAvailableSubjects($info, $curri_uid);
                 // var_dump($availableSubjects['alternativeSubjs']);
     
-                $available = "";
-                $nonAvailable = "";
-                $alternatives = "";
-                if(empty($availableSubjects['regularSubjs'])){
-                    $available .= '<tr>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                    </tr>';
-                    $nonAvailable .= '<tr>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                    </tr>';
-
-                }
-                else {
-                    foreach($availableSubjects['regularSubjs'] as $availableSubject => $key){
-                        // var_dump($key);
-                        
-                        if($key['reason'] == "ISSUES"){
-                            
-                            $nonAvailable .= '<tr style="background-color: orange; font-weight: bold" >
-                                <td>'.$key['subj_code'].'</td>
-                                <td>'.$key['subj_description'].'</td>
-                                <td>'.$key['subj_units'].'</td>
-                                <td>Requisites Issue</td>
-                                <td>'.$key['prerequi1'].'</td> 
-                                <td>'.$key['prerequi1remarks'].'</td>
-                                <td>'.$key['prerequi2'].'</td>
-                                <td>'.$key['prerequi2remarks'].'</td>
-                            </tr>';
-                          
-                        }
-                        elseif($key['reason'] == "OK" || $key['reason'] == "NOT_ENROLLED" ) {
-                            $available .= '<tr>
-                                <td>'.$key['subj_code'].'</td>
-                                <td>'.$key['subj_description'].'</td>
-                                <td>'.$key['subj_units'].'</td>
-                                <td>'.$key['subj_grade'].'</td>
-                                <td>Requisites Complied</td>
-                                <td>'.$key['prerequi1'].'</td> 
-                                <td>'.$key['prerequi1remarks'].'</td>
-                                <td>'.$key['prerequi2'].'</td>
-                                <td>'.$key['prerequi2remarks'].'</td>
-                            </tr>';
-                        }
-                        else {
-                            $available .= '<tr>
-                                <td>'.$key['subj_code'].'</td>
-                                <td>'.$key['subj_description'].'</td>
-                                <td>'.$key['subj_units'].'</td>
-                                <td>'.$key['subj_grade'].'</td>
-                                <td>Re-Enroll; Requisites Complied</td>
-                                <td>'.$key['prerequi1'].'</td> 
-                                <td>'.$key['prerequi1remarks'].'</td>
-                                <td>'.$key['prerequi2'].'</td>
-                                <td>'.$key['prerequi2remarks'].'</td>
-                            </tr>';
-                        }
-
-                    }
-                }
-
-                if(empty($availableSubjects['alternativeSubjs'])){
-                    $alternatives .= '<tr>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                        <td>NONE</td>
-                    </tr>';
-                }
-                else {
-                        foreach($availableSubjects['alternativeSubjs'] as $alternativeSubj => $key){
-                        // var_dump($key);
-                        
-                        if($key['reason'] == "OK" || $key['reason'] == "INCOMPLETE" ) {
-                            $alternatives .= '<tr>
-                                <td>'.$key['subj_code'].'</td>
-                                <td>'.$key['subj_description'].'</td>
-                                <td>'.$key['subj_units'].'</td>
-                                <td>'.$key['subj_grade'].'</td>
-                                <td>Requisites Complied</td>
-                                <td>'.$key['prerequi1'].'</td> 
-                                <td>'.$key['prerequi1remarks'].'</td>
-                                <td>'.$key['prerequi2'].'</td>
-                                <td>'.$key['prerequi2remarks'].'</td>
-                            </tr>';
-                        }
-
-                    }
-                }
+                $available = $this->getNoIssueAvailableSubjects($availableSubjects['regularSubjs']);
+                $nonAvailable = $this->getWithIssueAvailableSubjects($availableSubjects['regularSubjs']);
+                $alternatives = $this->getAlternativeSubjects($availableSubjects['alternativeSubjs']);
+                $unitsAcquired = 0;
 
                 $form['form-container']['student-info-fieldset'] = [
                     '#type' => 'fieldset',
@@ -367,15 +264,25 @@ class EnrollmentEvaluation extends FormBase {
                             <th>Description</th>
                             <th>Units</th>
                             <th>Grade</th>
-                            <th>Status</th>
                             <th>Pre-Requisite</th>
                             <th>Grade</th>
                             <th>Co-Requisite</th>
                             <th>Grade</th>
+                            <th>Status</th>
                             </tr>
                         </thead>
                         <tbody class="subjectsNoIssuesBody">
-                        '.$available.'
+                        '.$available['available'].'
+                        <tr>
+                            <td colspan="7"></td>
+                            <td>Max Load Units</td>
+                            <td>'.$availableSubjects['regularSubjs']['totalMaxUnits'].'</td>
+                        </tr>
+                        <tr>
+                            <td colspan="7"></td>
+                            <td>Total Aquired Units</td>
+                            <td>'.$available['totalUnits'].'</td>
+                        </tr>
                         </tbody>
                         </table>
                     </div>'),
@@ -405,11 +312,11 @@ class EnrollmentEvaluation extends FormBase {
                             <th>Code</th>
                             <th>Description</th>
                             <th>Units</th>
-                            <th>Status</th>
                             <th>Pre-Requisite</th>
                             <th>Grade</th>
                             <th>Co-Requisite</th>
                             <th>Grade</th>
+                            <th>Status</th>
                             </tr>
                         </thead>
                         <tbody class="subjectsWithIssuesBody">
@@ -429,7 +336,7 @@ class EnrollmentEvaluation extends FormBase {
                 $form['form-container']
                 ['subject-table-container']['subjectsAlternative']['description'] = [
                     '#type' => 'item',
-                    '#markup' => $this->t('The subjects listed below have issues and not advisable to enroll.'),
+                    '#markup' => $this->t('The subjects listed below can be enrolled as alternative if the student choose to.'),
                 ];
 
                 $form['form-container']
@@ -444,11 +351,11 @@ class EnrollmentEvaluation extends FormBase {
                             <th>Description</th>
                             <th>Units</th>
                             <th>Grade</th>
-                            <th>Status</th>
                             <th>Pre-Requisite</th>
                             <th>Grade</th>
                             <th>Co-Requisite</th>
                             <th>Grade</th>
+                            <th>Status</th>
                             </tr>
                         </thead>
                         <tbody class="subjectsAlternativeBody">
@@ -462,6 +369,134 @@ class EnrollmentEvaluation extends FormBase {
             }
         }
 
+    }
+
+    protected function getNoIssueAvailableSubjects($subjects){
+        // var_dump($subjects);
+        $available = "";
+        $unitsAcquired = 0;
+        $result = array();
+        if(empty($subjects)){
+            $available .= '<tr>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+            </tr>';
+        }
+        else {
+            foreach($subjects as $subject => $key){
+                // var_dump($key);
+                if($key['reason'] == "OK" || $key['reason'] == "NOT_ENROLLED" ) {
+                    $available .= '<tr>
+                        <td>'.$key['subj_code'].'</td>
+                        <td>'.$key['subj_description'].'</td>
+                        <td>'.$key['subj_units'].'</td>
+                        <td>'.$key['subj_grade'].'</td>
+                        <td>'.$key['prerequi1'].'</td> 
+                        <td>'.$key['prerequi1remarks'].'</td>
+                        <td>'.$key['prerequi2'].'</td>
+                        <td>'.$key['prerequi2remarks'].'</td>
+                        <td>Requisites Complied</td>
+                    </tr>';
+                    $unitsAcquired += $key['subj_units'];
+                }
+            }
+        }
+
+        $result['available'] = $available;
+        $result['totalUnits'] = $unitsAcquired;
+
+        return $result;
+
+    }
+
+    protected function getWithIssueAvailableSubjects($subjects){
+        $nonAvailable = "";
+        $result = array();
+        if(empty($subjects)){
+            $nonAvailable .= '<tr>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+            </tr>';
+        }
+        else {
+            foreach($subjects as $subject => $key){
+                // var_dump($key);
+                
+                if($key['reason'] == "ISSUES"){
+                    
+                    $nonAvailable .= '<tr style="background-color: orange; font-weight: bold" >
+                        <td>'.$key['subj_code'].'</td>
+                        <td>'.$key['subj_description'].'</td>
+                        <td>'.$key['subj_units'].'</td>
+                        <td>'.$key['prerequi1'].'</td> 
+                        <td>'.$key['prerequi1remarks'].'</td>
+                        <td>'.$key['prerequi2'].'</td>
+                        <td>'.$key['prerequi2remarks'].'</td>
+                        <td>Requisites Issue</td>
+                    </tr>';
+                  
+                }
+            }
+        }
+
+        return $nonAvailable;
+
+    }
+
+    protected function getAlternativeSubjects($subjects){
+        $alternatives = "";
+        
+        if(empty($subjects)){
+            $alternatives .= '<tr>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+                <td>NONE</td>
+            </tr>';
+        }
+        else {
+                foreach($subjects as $subject => $key){
+                // var_dump($key);
+                
+                if($key['reason'] == "OK" || $key['reason'] == "INCOMPLETE" || 
+                    $key['reason'] == "FAILED" ) {
+                    $alternatives .= '<tr>
+                        <td>'.$key['subj_code'].'</td>
+                        <td>'.$key['subj_description'].'</td>
+                        <td>'.$key['subj_units'].'</td>
+                        <td>'.$key['subj_grade'].'</td>
+                        <td>'.$key['prerequi1'].'</td> 
+                        <td>'.$key['prerequi1remarks'].'</td>
+                        <td>'.$key['prerequi2'].'</td>
+                        <td>'.$key['prerequi2remarks'].'</td>
+                        <td>Requisites Complied</td>
+                    </tr>';
+                }
+
+            }
+        }
+
+        return $alternatives;
     }
 
     /**

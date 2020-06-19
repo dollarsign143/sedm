@@ -132,7 +132,7 @@ class RegisterCurriculumForm extends FormBase{
 
         $form['form-container']['curriculum']['curriculum-info-container']['curriculum-school-year'] = [
             '#type' => 'textfield',
-            '#title' => $this->t('School Year'),
+            '#title' => $this->t('Effectivity'),
             '#required' => TRUE,
             '#maxlength' => 9,
             '#attributes' => [
@@ -152,6 +152,18 @@ class RegisterCurriculumForm extends FormBase{
             'class' => ['flat-input', ],
             ],
             '#weight' => 6,
+        ];
+
+        $form['form-container']['curriculum']['curriculum-info-container']['basis'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Basis'),
+            '#required' => TRUE,
+            '#maxlength' => 1000,
+            '#attributes' => [
+            'placeholder' => 'CMO XXXXXX',
+            'class' => ['flat-input', ],
+            ],
+            '#weight' => 7,
         ];
             
         $form['form-container']['curriculum']['subjects-container'] = [
@@ -770,6 +782,8 @@ class RegisterCurriculumForm extends FormBase{
 
             $curr_info['curr_yearCreated'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','curriculum-year']);
 
+            $curr_info['curr_basis'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','basis']);
+
             $curr_info['curr_college'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','college']);
 
             $curr_info['curr_program'] = $form_state->getValue(['form-container','curriculum','curriculum-info-container','program']);
@@ -798,26 +812,26 @@ class RegisterCurriculumForm extends FormBase{
             $isCurriAvailable = $CDO->isCurriculumAvailable($curr_info['curr_program'], $curr_info['curr_num']);
             
             if($isCurriAvailable){
-            $_SESSION['sedm']['curr_subjs'] = $curr_subjs;
-            $_SESSION['sedm']['curr_infos'] = $curr_info; 
-            $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm');
+                $_SESSION['sedm']['curr_subjs'] = $curr_subjs;
+                $_SESSION['sedm']['curr_infos'] = $curr_info; 
+                $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm');
             }
             else {
-            $modal_form['message'] = [
-                '#type' => 'item',
-                '#markup' => $this->t('Curriculum number is not available. Please check the saved/published curriculums!')
-            ];
+                $modal_form['message'] = [
+                    '#type' => 'item',
+                    '#markup' => $this->t('Curriculum number is not available. Please check the saved/published curriculums!')
+                ];
 
-            $_SESSION['sedm']['curr_id'] = 1;
+                $_SESSION['sedm']['curr_id'] = 1;
 
-            $modal_form['edit'] = [
-                '#type' => 'link',
-                '#title' => $this->t('Edit Curriculum'),
-                '#url' => Url::fromRoute('sedm.menu.curriculum.default.tab.edit.curriculum.form'),
-                '#attributes' => [
-                'class' => ['button',],
-                ],
-            ];
+                $modal_form['edit'] = [
+                    '#type' => 'link',
+                    '#title' => $this->t('Edit Curriculum'),
+                    '#url' => Url::fromRoute('sedm.menu.curriculum.default.tab.edit.curriculum.form'),
+                    '#attributes' => [
+                    'class' => ['button',],
+                    ],
+                ];
             }
 
             $command = new OpenModalDialogCommand($this->t('Register New Curriculum'), $modal_form, ['width' => '50%']);

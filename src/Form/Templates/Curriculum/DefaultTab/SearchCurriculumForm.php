@@ -226,6 +226,32 @@ class SearchCurriculumForm extends FormBase{
 
     public function buildCurriculumData(array &$form, FormStateInterface $form_state, $curri_info = array()){
 
+        $form['form-container']['curriculum-subjects']['subjects-container']['curr_info'] = [
+            '#type' => 'details',
+            '#title' => $this->t("Curriculum Info."),
+            '#open' => TRUE,
+        ];
+
+        $form['form-container']['curriculum-subjects']['subjects-container']['curr_info']['effectivity'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Effectivity'),
+            '#value' => $curri_info[0]->curriculum_schoolYearCreated,
+            '#attributes' => [
+                'class' => ['flat-input',],
+                'disabled' => TRUE,
+            ],
+        ];
+
+        $form['form-container']['curriculum-subjects']['subjects-container']['curr_info']['basis'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Basis'),
+            '#value' => $curri_info[0]->curriculum_basis,
+            '#attributes' => [
+                'class' => ['flat-input',],
+                'disabled' => TRUE,
+            ],
+        ];
+
         foreach(self::$years as $year => $yearTitle){
             $form['form-container']['curriculum-subjects']['subjects-container'][$year] = [
                 '#type' => 'details',

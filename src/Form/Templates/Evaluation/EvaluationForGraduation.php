@@ -175,40 +175,10 @@ class EvaluationForGraduation extends FormBase {
                     ],
                 ];
     
-                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['age'] = [
-                    '#type' => 'textfield',
-                    '#title' => $this->t('Age'),
-                    '#value' => ucwords($stud_info[0]->studProf_age),
-                    '#attributes' => [
-                        'class' => ['flat-input',],
-                        'disabled' => TRUE,
-                    ],
-                ];
-    
-                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['gender'] = [
-                    '#type' => 'textfield',
-                    '#title' => $this->t('Gender'),
-                    '#value' => ucwords($stud_info[0]->studProf_gender),
-                    '#attributes' => [
-                        'class' => ['flat-input',],
-                        'disabled' => TRUE,
-                    ],
-                ];
-    
                 $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['college'] = [
                     '#type' => 'textfield',
                     '#title' => $this->t('College'),
                     '#value' => ucwords($stud_info[0]->college_abbrev),
-                    '#attributes' => [
-                        'class' => ['flat-input',],
-                        'disabled' => TRUE,
-                    ],
-                ];
-    
-                $form['form-container']['stud-info-container']['student-info-fieldset']['info-container']['year'] = [
-                    '#type' => 'textfield',
-                    '#title' => $this->t('Year Level'),
-                    '#value' => ucwords($stud_info[0]->student_yearLevel),
                     '#attributes' => [
                         'class' => ['flat-input',],
                         'disabled' => TRUE,
