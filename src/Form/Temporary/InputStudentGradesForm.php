@@ -60,7 +60,7 @@ class InputStudentGradesForm extends FormBase {
             '#autocomplete_route_name' => 'sedm.autocomplete.subjects',
             '#placeholder' => $this->t('Input subject code or description'),
             '#attributes' => [
-                'class' => ['flat-element', ],
+                'class' => ['flat-element'],
             ],
         ];
 
@@ -174,7 +174,6 @@ class InputStudentGradesForm extends FormBase {
     public function validateForm(array &$form, FormStateInterface $form_state) {
 
     }
-
 
     /**
      * {@inheritdoc}
