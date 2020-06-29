@@ -16,13 +16,13 @@ sedm.curriculum_menu:
   description: 'Subject Evaluation - Curriculum Menu'
   parent:  sedm.evaluation_menu
   route_name: sedm.menu.curriculum.default.tab
-  weight: -101
+  weight: -1
 
 sedm.student.grade.registration.menu:
   title: 'Temporary - Student Grade Registration'
   description: 'Temporary - Student Grade Registration'
   parent: sedm.evaluation_menu
   route_name: sedm.menu.temporary.register.tab
-  weight: -102
+  weight: 1
 
 ################ THE END OF LINK MENUS ################################

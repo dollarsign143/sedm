@@ -190,6 +190,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     // #2.5: if the prerequisites are satisfied the subject will be included to the available subjects for student
                     if($isPrereque1Satisfied['isSatisfied'] && $isPrereque2Satisfied['isSatisfied']){
                         $subjects[$curri_subj->subject_uid] = [
+                            'subj_uid' => $curri_subj->subject_uid,
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
@@ -203,6 +204,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     }
                     else {
                         $subjects[$curri_subj->subject_uid] = [
+                            'subj_uid' => $curri_subj->subject_uid,
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
@@ -226,6 +228,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                         $isPrereque1Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite1);
                         $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2); 
                         $subjects[$curri_subj->subject_uid] = [
+                            'subj_uid' => $curri_subj->subject_uid,
                             'subj_code' => $curri_subj->subject_code,
                             'subj_description' => $curri_subj->subject_desc,
                             'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),
@@ -254,6 +257,7 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
                     $isPrereque2Satisfied = $this->isSubjectPrereqSatisfied($data['id_number'], $curri_subj->curricSubj_prerequisite2); 
                     
                     $subjects[$curri_subj->subject_uid] = [
+                        'subj_uid' => $curri_subj->subject_uid,
                         'subj_code' => $curri_subj->subject_code,
                         'subj_description' => $curri_subj->subject_desc,
                         'subj_units' => ($curri_subj->curricSubj_labUnits + $curri_subj->curricSubj_lecUnits),

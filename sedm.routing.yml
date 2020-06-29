@@ -15,6 +15,22 @@ sedm.menu.evaluation:
   requirements:
     _permission: 'access content'
 
+sedm.menu.evaluation.enrollment:
+  path: '/sedm/menu/evaluation/enrollment'
+  defaults:
+    _form: '\Drupal\sedm\Form\Templates\Evaluation\EnrollmentEvaluation' 
+    _title: 'Evaluation'
+  requirements:
+    _permission: 'access content'
+
+sedm.menu.evaluation.enrollment.add.subject.modal:
+  path: '/sedm/menu/evaluation/enrollment/add/subject'
+  defaults:
+    _controller: '\Drupal\sedm\Controller\EnrollmentEvaluationModalController::verifyAddingSubject'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
 sedm.menu.curriculum.default.tab: 
   path: '/sedm/menu/curriculum/tab/default'
   defaults:
@@ -28,6 +44,14 @@ sedm.autocomplete.subjects:
   path: '/sedm/menu/curriculum/autocomplete/subjects'
   defaults:
     _controller: '\Drupal\sedm\Controller\SubjectAutoCompleteController::handleAutocomplete'
+    _format: json
+  requirements:
+    _permission: 'access content'
+
+sedm.autocomplete.alternative.subjects:
+  path: '/sedm/menu/curriculum/autocomplete/alternative/subjects'
+  defaults:
+    _controller: '\Drupal\sedm\Controller\SubjectAutoCompleteController::handleAutocompleteAlternativeSubject'
     _format: json
   requirements:
     _permission: 'access content'

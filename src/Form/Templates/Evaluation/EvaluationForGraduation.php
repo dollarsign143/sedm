@@ -11,6 +11,7 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Logger\LoggerChannelTrait;
+use Drupal\Core\Url;
 
 use Drupal\sedm\Database\EvaluationDatabaseOperations;
 
@@ -40,6 +41,20 @@ class EvaluationForGraduation extends FormBase {
             '#type' => 'item',
             '#markup' => $this->t('<h2>Evaluation for Graduating Students</h2>'),
         ];
+
+        // $form['form-container']['printButton'] = [
+        //     '#type' => 'button',
+        //     '#value' => 'Print',
+        //     '#attributes' => [
+        //         'id' => 'print-button'
+        //     ],
+        //     '#ajax' =>  [
+        //         'callback' => '::printButton',
+        //         'url' => Url::fromRoute('sedm.menu.evaluation.enrollment'),
+        //         'options' => ['query' => ['ajax_form' => 1]],
+        //         'event' => 'click',
+        //     ],
+        // ];
 
         $form['form-container']['student-details-container'] = [
             '#type' => 'fieldset',
@@ -80,6 +95,9 @@ class EvaluationForGraduation extends FormBase {
             '#type' => 'container',
             '#prefix' => '<div id="stud-info-container-wrapper">',
             '#suffix' => '</div>',
+            // '#attributes' => [
+            //     'class' => ['print-only'],
+            // ],
             '#weight' => 2
         ];
 
@@ -87,8 +105,22 @@ class EvaluationForGraduation extends FormBase {
             '#type' => 'container',
             '#prefix' => '<div id="eval-sheet-container-wrapper">',
             '#suffix' => '</div>',
+            // '#attributes' => [
+            //     'class' => ['print-only'],
+            // ],
             '#weight' => 3
         ];
+
+        $form['form-container']['category-units-container'] = [
+            '#type' => 'container',
+            '#prefix' => '<div id="category-units-container-wrapper">',
+            '#suffix' => '</div>',
+            '#attributes' => [
+                'class' => ['print-only'],
+            ],
+            '#weight' => 4
+        ];
+
 
         return $form;
 
@@ -136,6 +168,9 @@ class EvaluationForGraduation extends FormBase {
                     '#type' => 'fieldset',
                     '#title' => 'Student Info.',
                     '#weight' => 2,
+                    '#attributes' => [
+                        'class' => ['print-only'],
+                    ],
                 ];
     
                 $form['form-container']['stud-info-container']['student-info-fieldset']['info-container'] = [
@@ -198,14 +233,20 @@ class EvaluationForGraduation extends FormBase {
                 $form['form-container']['eval-sheet-container']['eval-sheet'] = [
                     '#type' => 'fieldset',
                     '#title' => $this->t('Evaluated Subjects'),
+                    '#attributes' => [
+                        'class' => ['print-only', 'page-break-before', 'page-break-after'],
+                    ],
                 ];
                 // ALGORITHM
                 // #1: get subject categories
                 $categories = $EDO->getSubjectCategories();
+                
                 // #2: for each category get subjects
                 foreach($categories as $category){
                     $data = NULL;
                     $category_total_units = 0;
+                    $categorySummary = [];
+                    $categorySummaryUnits = 0;
 
                     if($category->subjCat_uid == 10 || $category->subjCat_name == 'ELECTIVE SUBJECT'){
                         $category_subjs = $EDO->getCurriculumElectiveSubjects($curri_uid);
@@ -214,34 +255,83 @@ class EvaluationForGraduation extends FormBase {
                         // #2.1: get the subject of the specified category
                         $category_subjs = $EDO->getCurriculumSubjectsByCategory($curri_uid, $category->subjCat_uid);
                     }
+
+                    $categorySummary[$category->subjCat_name] = [
+                        'categoryName' => $category->subjCat_name,
+                        'totalunits' => $category_total_units,
+                        'totalAcquiredUnits' => $categorySummaryUnits
+                    ];
                     
                     // #3: for each subject check the remarks on the student
-                    foreach($category_subjs as $subj){
-                        $category_total_units += ($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits);
-                        $remarks = $EDO->getStudSubjectRemarks($stud_uid, $subj->subject_uid);
-                        if(empty($remarks)){
-                            $data .= '<tr>
+                    if(empty($category_subjs)){
+                        $data .= '<tr>
+                            <td>NONE</td>
+                            <td>NONE</td>
+                            <td>NONE</td>
+                            <td>NONE</td>
+                        </tr>';
+                    }
+                    else {
+                        foreach($category_subjs as $subj){
+                            $category_total_units += ($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits);
+                            $categorySummary[$category->subjCat_name] = [
+                                'categoryName' => $category->subjCat_name,
+                                'totalunits' => $category_total_units,
+                                'totalAcquiredUnits' => $categorySummaryUnits
+                            ];
+                            $remarks = $EDO->getStudSubjectRemarks($stud_uid, $subj->subject_uid);
+                            if(empty($remarks)){
+                                $categorySummaryUnits += 0;
+                                $categorySummary[$category->subjCat_name] = [
+                                    'categoryName' => $category->subjCat_name,
+                                    'totalunits' => $category_total_units,
+                                    'totalAcquiredUnits' => $categorySummaryUnits
+                                ];
+                                $data .= '<tr>
+                                    <td>'.$subj->subject_code.'</td>
+                                    <td>'.$subj->subject_desc.'</td>
+                                    <td>'.($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits).'</td>
+                                    </tr>';
+                            }
+                            else {
+                                
+                                if(empty($remarks[0]->studSubj_finalRemarks)){
+                                    $final_remarks = $remarks[0]->studSubj_remarks;
+                                }
+                                else {
+                                    $final_remarks = $remarks[0]->studSubj_finalRemarks;
+                                }
+    
+                                if($final_remarks == 'INC' || $final_remarks == 'FAILED' || 
+                                $final_remarks == 'DRP' || $final_remarks == 'DROP' || 
+                                $final_remarks > 3){
+                                    $categorySummaryUnits += 0;
+                                    $categorySummary[$category->subjCat_name] = [
+                                        'categoryName' => $category->subjCat_name,
+                                        'totalunits' => $category_total_units,
+                                        'totalAcquiredUnits' => $categorySummaryUnits
+                                    ];
+                                }
+                                else{
+                                    $categorySummaryUnits += ($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits);
+                                    $categorySummary[$category->subjCat_name] = [
+                                        'categoryName' => $category->subjCat_name,
+                                        'totalunits' => $category_total_units,
+                                        'totalAcquiredUnits' => $categorySummaryUnits
+                                    ];
+                                }
+    
+                                $data .= '<tr>
                                 <td>'.$subj->subject_code.'</td>
                                 <td>'.$subj->subject_desc.'</td>
                                 <td>'.($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits).'</td>
+                                <td>'.$final_remarks.'</td>
                                 </tr>';
-                        }
-                        else {
-                            if(empty($remarks[0]->studSubj_finalRemarks)){
-                                $final_remarks = $remarks[0]->studSubj_remarks;
                             }
-                            else {
-                                $final_remarks = $remarks[0]->studSubj_finalRemarks;
-                            }
-                            $data .= '<tr>
-                            <td>'.$subj->subject_code.'</td>
-                            <td>'.$subj->subject_desc.'</td>
-                            <td>'.($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits).'</td>
-                            <td>'.$final_remarks.'</td>
-                            </tr>';
+                            
                         }
-                        
                     }
+
 
                     $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid] = [
                         '#type' => 'details',
@@ -251,7 +341,7 @@ class EvaluationForGraduation extends FormBase {
 
                     $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid]['description'] = [
                         '#type' => 'item',
-                        '#markup' => $this->t('The subjects listed below are evaluated.'),
+                        '#markup' => $this->t('The subjects listed below have been evaluated.'),
                     ];
 
                     $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid]['table'] = [
@@ -274,9 +364,42 @@ class EvaluationForGraduation extends FormBase {
                         </div>'),
                     ];
 
-                    $form['form-container']['eval-sheet-container']['eval-sheet'][$category->subjCat_uid]['total_units'] = [
-                        '#type' => 'item',
-                        '#markup' => $this->t('Total Units: @total_units', ['@total_units' => $category_total_units]),
+
+                    $form['form-container']['category-units-container']['category-units-fieldset'] = [
+                        '#type' => 'fieldset',
+                        '#title' => 'Summary',
+                        '#weight' => 4,
+                    ];
+                    // var_dump($categorySummary);
+                    // $summaryData = NULL;
+                    foreach($categorySummary as $summary){
+                        // var_dump($summary);
+                        $summaryData .= '<tr>
+                            <td>'.$summary['categoryName'].'</td>
+                            <td>'.$summary['totalunits'].'</td>
+                            <td>'.$summary['totalAcquiredUnits'].'</td>
+                            </tr>';
+
+                    }
+
+                    
+                    $form['form-container']['category-units-container']['category-units-fieldset'] = [
+                        '#type' => 'markup',
+                        '#markup' => $this->t('
+                        <div>
+                            <table>
+                            <thead>
+                                <tr>
+                                <th>Category Name</th>
+                                <th>Total Units</th>
+                                <th>Total Acquired Units</th>
+                                </tr>
+                            </thead>
+                            <tbody class="categoryUnitsSummaryBody">
+                            '.$summaryData.'
+                            </tbody>
+                            </table>
+                        </div>'),
                     ];
                 }
 
@@ -299,6 +422,18 @@ class EvaluationForGraduation extends FormBase {
         }
 
     }
+
+    public function printButton(array &$form, FormStateInterface $form_state){
+        $options = array(
+            'target_id' => 'eval-for-grad-form-container-wrapper',
+            'button_id' => 'print-button',
+            'value' => 'Print',
+            'type' => 'button',
+            );
+          
+          print area_print_form($options);
+    }
+
 
     /**
      * {@inheritdoc}

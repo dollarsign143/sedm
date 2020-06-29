@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Ajax\OpenDialogCommand;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Database\Connection;
@@ -238,6 +239,14 @@ class EnrollmentEvaluation extends FormBase {
                         'disabled' => TRUE,
                     ],
                 ];
+
+                $form['form-container']
+                ['subject-table-container'] = [
+                    '#type' => 'container',
+                    '#prefix' => '<div id="enrollment-eval-form-subject-table-container-wrapper">',
+                    '#suffix' => '</div>',
+                    '#weight' => 3
+                ];
     
                 $form['form-container']
                 ['subject-table-container']['subjectsAvailable'] = [
@@ -286,6 +295,46 @@ class EnrollmentEvaluation extends FormBase {
                         </tbody>
                         </table>
                     </div>'),
+                ];
+
+                // Selection
+                $form['form-container']
+                ['subject-table-container']['subjectsAvailable']['selectSubject'] = [
+                    '#type' => 'select',
+                    '#title' => 'Select Subject',
+                    '#options' => $this->getAdditionalSubject($availableSubjects['regularSubjs'], $availableSubjects['alternativeSubjs']),
+                    '#attributes' => [
+                        'class' => ['flat-element',],
+                    ],
+                ];
+
+                $addingType = [
+                    '1' => 'Requested Subject',
+                    '2' => 'Offered Subject' 
+                ];
+                $form['form-container']
+                ['subject-table-container']['subjectsAvailable']['addingType'] = [
+                    '#type' => 'select',
+                    '#title' => 'Select Subject',
+                    '#options' => $addingType,
+                    '#attributes' => [
+                        'class' => ['flat-element',],
+                    ],
+                ];
+
+                $form['form-container']
+                ['subject-table-container']['subjectsAvailable']['add_subject'] = [
+                    '#type' => 'submit',
+                    '#name' => 'addSubject',
+                    '#value' => 'Add Subject',
+                    '#attributes' => [
+                        'class' => ['flat-btn',],
+                    ],
+                    '#ajax' => [
+                        'callback' => '::verifyAddingSubject',
+                        'wrapper' => 'enrollment-eval-form-container-wrapper', 
+                        'event' => 'click',
+                    ]
                 ];
 
                 $form['form-container']
@@ -499,6 +548,48 @@ class EnrollmentEvaluation extends FormBase {
         return $alternatives;
     }
 
+    protected function getAdditionalSubject($withIssues, $alternatives){
+
+        $additionalSubjects = [];
+        foreach($alternatives as $alternative => $key){
+            // var_dump($key);
+            
+            if($key['reason'] == "OK" || $key['reason'] == "INCOMPLETE" || 
+                $key['reason'] == "FAILED" ) {
+                $additionalSubjects[] = [
+                    $key['subj_uid'] => $key['subj_code'].' - '.$key['subj_description']
+                ];
+            }
+
+        }
+
+        foreach($withIssues as $withIssue => $key){
+            // var_dump($key);
+            
+            if($key['reason'] == "ISSUES") {
+                $additionalSubjects[] = [
+                    $key['subj_uid'] => $key['subj_code'].' - '.$key['subj_description']
+                ];
+            }
+
+        }
+
+        return $additionalSubjects;
+    }
+
+    public function verifyAddingSubject(array &$form, FormStateInterface $form_state){
+        
+        $response = new AjaxResponse();
+        $selectedSubj = $form_state->getValue(['form-container','subject-table-container','subjectsAvailable','selectSubject']);
+        // var_dump($selectedSubj);
+        $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm');
+        $command = new OpenDialogCommand($this->t('Add subject'), $modal_form, ['width' => '50%']);
+
+        $response->addCommand($command);
+
+        return $response;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -515,6 +606,7 @@ class EnrollmentEvaluation extends FormBase {
      * {@inheritdoc}
      */
     public function submitForm(array &$form, FormStateInterface $form_state) {
+        
     }
     
 }

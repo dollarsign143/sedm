@@ -29,8 +29,6 @@ class SubjectAutocompleteController extends ControllerBase {
       $typed_string = Tags::explode($input);
       $typed_string = Unicode::strtolower(array_pop($typed_string));
       $subjects = $CDO->getSubjectsByKeyword($typed_string);
-      // @todo: Apply logic for generating results based on typed_string and other
-      // arguments passed.
       for ($i = 0; $i < count($subjects); $i++) {
         $results[] = [
           'value' => $subjects[$i]->subject_uid . ' '.$subjects[$i]->subject_code . ' - ' . $subjects[$i]->subject_desc,
@@ -38,6 +36,27 @@ class SubjectAutocompleteController extends ControllerBase {
         ];
       }
     }
+
+    return new JsonResponse($results);
+  }
+
+  public function handleAutocompleteAlternativeSubject(Request $request) {
+    
+    $results = ['test1', 'test2', 'test3'];
+    
+
+    // Get the typed string from the URL, if it exists.
+    // if ($input = $request->query->get('q')) {
+    //   $typed_string = Tags::explode($input);
+    //   $typed_string = Unicode::strtolower(array_pop($typed_string));
+    //   $subjects = $CDO->getSubjectsByKeyword($typed_string);
+    //   for ($i = 0; $i < count($subjects); $i++) {
+    //     $results[] = [
+    //       'value' => $subjects[$i]->subject_uid . ' '.$subjects[$i]->subject_code . ' - ' . $subjects[$i]->subject_desc,
+    //       'label' => $subjects[$i]->subject_code . '- (' . $subjects[$i]->subject_desc . ')',
+    //     ];
+    //   }
+    // }
 
     return new JsonResponse($results);
   }
