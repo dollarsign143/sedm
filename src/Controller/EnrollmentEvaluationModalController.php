@@ -23,7 +23,7 @@ class EnrollmentEvaluationModalController extends ControllerBase {
   /**
    * Handler for autocomplete request.
    */
-  public function verifyAddingSubject(Request $request) {
+  public function verifyAddingSubject(array &$form, FormStateInterface $form_state) {
     
     $response = new AjaxResponse();
     $selectedSubj = $form_state->getValue(['form-container','subject-table-container','subjectsAvailable','selectSubject']);

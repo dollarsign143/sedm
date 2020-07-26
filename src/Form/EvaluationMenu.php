@@ -51,6 +51,24 @@ class EvaluationMenu extends FormBase {
       $enrollmentEvalForm = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Templates\Evaluation\EnrollmentEvaluation');
       $form['enrollment_eval']['enrollment-eval-container']['enrollment-eval-form'] = $enrollmentEvalForm;
 
+      $form['student_request'] = array(
+        '#type' => 'details',
+        '#title' => $this->t('Student Request'),
+        '#group' => 'evaluation_menu',
+      );
+
+      $form['student_request']['student-request-container'] = [
+        '#type' => 'container',
+        '#prefix' => '<div id="student-request-container-wrapper">',
+        '#suffix' => '</div>',
+      ];
+
+
+      // $add = new ActiveSubjects();
+      $studentRequestForm = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Templates\Evaluation\StudentRequest');
+      $form['student_request']['student-request-container']['student-request-form'] = $studentRequestForm;
+
+
       $form['active_subjects'] = array(
         '#type' => 'details',
         '#title' => $this->t('Active Subjects'),

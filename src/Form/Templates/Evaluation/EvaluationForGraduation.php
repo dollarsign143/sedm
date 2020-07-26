@@ -273,7 +273,8 @@ class EvaluationForGraduation extends FormBase {
                     }
                     else {
                         foreach($category_subjs as $subj){
-                            $category_total_units += ($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits);
+                            $units = $subj->curricSubj_labUnits + $subj->curricSubj_lecUnits;
+                            $category_total_units += $units;
                             $categorySummary[$category->subjCat_name] = [
                                 'categoryName' => $category->subjCat_name,
                                 'totalunits' => $category_total_units,
@@ -287,10 +288,11 @@ class EvaluationForGraduation extends FormBase {
                                     'totalunits' => $category_total_units,
                                     'totalAcquiredUnits' => $categorySummaryUnits
                                 ];
+                                
                                 $data .= '<tr>
                                     <td>'.$subj->subject_code.'</td>
                                     <td>'.$subj->subject_desc.'</td>
-                                    <td>'.($subj->curricSubj_labUnits + $subj->curricSubj_lecUnits).'</td>
+                                    <td>'.$units.'</td>
                                     </tr>';
                             }
                             else {

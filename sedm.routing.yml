@@ -48,11 +48,19 @@ sedm.autocomplete.subjects:
   requirements:
     _permission: 'access content'
 
-sedm.autocomplete.alternative.subjects:
-  path: '/sedm/menu/curriculum/autocomplete/alternative/subjects'
+sedm.enrollment.evaluation.autocomplete.requested.subjects:
+  path: '/sedm/menu/evaluation/enrollment/requested/subjects'
   defaults:
-    _controller: '\Drupal\sedm\Controller\SubjectAutoCompleteController::handleAutocompleteAlternativeSubject'
+    _controller: '\Drupal\sedm\Controller\SubjectAutoCompleteController::handleAutocompleteRequestedSubject'
     _format: json
+  requirements:
+    _permission: 'access content'
+
+sedm.enrollment.evaluation.subject.request:
+  path: '/sedm/menu/evaluation/enrollment/request/subject'
+  defaults:
+    _form: '\Drupal\sedm\Form\Modals\VerifySubjectRequestModalForm'
+    _title: 'Verify Subject Request'
   requirements:
     _permission: 'access content'
 

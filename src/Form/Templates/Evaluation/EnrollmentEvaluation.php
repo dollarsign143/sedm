@@ -16,6 +16,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelTrait;
 
 use Drupal\sedm\Database\EvaluationDatabaseOperations;
+use Drupal\sedm\Controller\EnrollmentEvaluationModalController;
 
 class EnrollmentEvaluation extends FormBase {
     use LoggerChannelTrait;
@@ -107,6 +108,7 @@ class EnrollmentEvaluation extends FormBase {
         $form['form-container']['student']['details-container']['evaluate'] = [
             '#type' => 'submit',
             '#value' => 'Evaluate',
+            '#buttonName' => 'evaluate',
             '#attributes' => [
                 'class' => ['flat-btn',],
             ],
@@ -121,10 +123,127 @@ class EnrollmentEvaluation extends FormBase {
             '#type' => 'container',
             '#prefix' => '<div id="subj-table-container-wrapper">',
             '#suffix' => '</div>',
+            '#attributes' => [
+                'class' => ['hide',],
+            ],
             '#weight' => 3,
         ];
 
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable'] = [
+            '#type' => 'details',
+            '#title' => $this->t('Regular Subjects (No Issues)'),
+            '#open' => TRUE,
+            '#weight' => 4
+        ];
+
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable']['description'] = [
+            '#type' => 'item',
+            '#markup' => $this->t('The subjects listed below are advisable to enroll.'),
+        ];
+
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable']['table'] = [
+            '#type' => 'item',
+            '#markup' => $this->t("Loading..."),
+        ];   
+
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable']['subject-request-container'] = [
+            '#type' => 'container',
+        ];
+
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable']['subject-request-container']
+        ['request_status'] = [
+            '#type' => 'container',
+        ];
+
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable']['subject-request-container']
+        ['subject_selection'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Subject'),
+            '#autocomplete_route_name' => 'sedm.enrollment.evaluation.autocomplete.requested.subjects',
+            '#placeholder' => $this->t('Input subject code or description'),
+            '#attributes' => [
+                'class' => ['flat-element'],
+            ],
+        ];
+        $request_type = [
+            'requested' => 'Requested Subject',
+            'offered' => 'Offered Subject',
+        ];
+
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable']['subject-request-container']
+        ['request_type'] = [
+            '#type' => 'select',
+            '#title' => 'Select Request Type',
+            '#options' => $request_type,
+            '#attributes' => [
+                'class' => ['flat-element',],
+            ],
+        ];
+
+        $form['form-container']
+        ['subject-table-container']['subjectsAvailable']['subject-request-container']
+        ['request_submit'] = [
+            '#type' => 'submit',
+            '#value' => 'Add Subject',
+            // '#buttonName' => 'addSubject',
+            '#attributes' => [
+                'class' => ['flat-btn',],
+            ],
+            '#ajax' => [
+                'callback' => '::addRequestedSubject',
+                'wrapper' => 'enrollment-eval-form-container-wrapper', 
+                'event' => 'click',
+            ]
+        ];
+
+
         return $form;
+    }
+
+    public function addRequestedSubject(array &$form, FormStateInterface $form_state){
+
+        $info['id_number'] = $form_state->getValue(['form-container','student',
+        'details-container','idNumber']);
+
+        $info['year_level'] = $form_state->getValue(['form-container','student','details-container',
+        'select_container','yearLevel']);
+
+        $info['semester'] = $form_state->getValue(['form-container','student','details-container',
+        'select_container','semester']);
+
+        $info['selectedSubj'] = $form_state->getValue(['form-container','subject-table-container','subjectsAvailable',
+        'subject-request-container','subject_selection']);
+
+        $info['requestType'] = $form_state->getValue(['form-container','subject-table-container','subjectsAvailable',
+        'subject-request-container','request_type']);
+
+        if($form_state->getErrors()){
+
+            $form['form-container']
+            ['subject-table-container']['subjectsAvailable']['subject-request-container']
+            ['request_status']['status_message'] = [
+                '#type' => 'status_messages',
+            ];
+
+            return $form['form-container'];
+        }
+            // this condition will append the subjects table
+        else{
+            $EDO = new EvaluationDatabaseOperations();
+            $isInsertedData = $EDO->insertStudentRequest($info);
+
+            if($isInsertedData){
+                searchAvailableSubjects($form, $form_state);
+            }
+        }
+        
     }
 
     /**
@@ -150,7 +269,7 @@ class EnrollmentEvaluation extends FormBase {
             $info['id_number'] = $form_state->getValue(['form-container','student','details-container','idNumber']);
             $info['year_level'] = $form_state->getValue(['form-container','student','details-container','select_container','yearLevel']);
             $info['semester'] = $form_state->getValue(['form-container','student','details-container','select_container','semester']);
-            
+            $_SESSION['sedm']['studInfo'] = $info;
             $EDO = new EvaluationDatabaseOperations();
             $stud_info = $EDO->getStudentInfo($info['id_number']);
             
@@ -169,12 +288,23 @@ class EnrollmentEvaluation extends FormBase {
             }
             else {
                 $curri_uid = $stud_info[0]->curriculum_uid;
+                $_SESSION['sedm']['curri_uid'] = $curri_uid;
+
                 $availableSubjects = $EDO->getAvailableSubjects($info, $curri_uid);
-                // var_dump($availableSubjects['alternativeSubjs']);
+                $_SESSION['sedm']['availableSubjects'] = $availableSubjects;
     
                 $available = $this->getNoIssueAvailableSubjects($availableSubjects['regularSubjs']);
                 $nonAvailable = $this->getWithIssueAvailableSubjects($availableSubjects['regularSubjs']);
                 $alternatives = $this->getAlternativeSubjects($availableSubjects['alternativeSubjs']);
+               
+                $additional = $this->getAdditionalSubject($availableSubjects['additionalSubjs']);
+                $available['totalUnits'] += $additional['additionalSubjUnits'];
+                if($available['totalUnits'] > $availableSubjects['regularSubjs']['totalMaxUnits']){
+                    $available['warning'] = "Warning: Acquired units overdo the maximum allowed units!";
+                }
+                else {
+                    $available['warning'] = "";
+                }
                 $unitsAcquired = 0;
 
                 $form['form-container']['student-info-fieldset'] = [
@@ -240,31 +370,10 @@ class EnrollmentEvaluation extends FormBase {
                     ],
                 ];
 
-                $form['form-container']
-                ['subject-table-container'] = [
-                    '#type' => 'container',
-                    '#prefix' => '<div id="enrollment-eval-form-subject-table-container-wrapper">',
-                    '#suffix' => '</div>',
-                    '#weight' => 3
-                ];
+                $form['form-container']['subject-table-container']['#attributes']['class'] = ['unhide'];
     
                 $form['form-container']
-                ['subject-table-container']['subjectsAvailable'] = [
-                    '#type' => 'details',
-                    '#title' => $this->t('Regular Subjects (No Issues)'),
-                    '#open' => TRUE,
-                ];
-    
-                $form['form-container']
-                ['subject-table-container']['subjectsAvailable']['description'] = [
-                    '#type' => 'item',
-                    '#markup' => $this->t('The subjects listed below are advisable to enroll.'),
-                ];
-    
-                $form['form-container']
-                ['subject-table-container']['subjectsAvailable']['table'] = [
-                    '#type' => 'markup',
-                    '#markup' => $this->t('
+                ['subject-table-container']['subjectsAvailable']['table']['#markup'] = $this->t('
                     <div>
                         <table>
                         <thead>
@@ -281,67 +390,30 @@ class EnrollmentEvaluation extends FormBase {
                             </tr>
                         </thead>
                         <tbody class="subjectsNoIssuesBody">
-                        '.$available['available'].'
+                        '.$available['available'].
+                        $additional['additionalSubj'].'
                         <tr>
                             <td colspan="7"></td>
                             <td>Max Load Units</td>
                             <td>'.$availableSubjects['regularSubjs']['totalMaxUnits'].'</td>
                         </tr>
                         <tr>
-                            <td colspan="7"></td>
+                            <td colspan="7">'.$available['warning'].'</td>
                             <td>Total Aquired Units</td>
                             <td>'.$available['totalUnits'].'</td>
                         </tr>
                         </tbody>
                         </table>
-                    </div>'),
-                ];
+                    </div>');
 
                 // Selection
-                $form['form-container']
-                ['subject-table-container']['subjectsAvailable']['selectSubject'] = [
-                    '#type' => 'select',
-                    '#title' => 'Select Subject',
-                    '#options' => $this->getAdditionalSubject($availableSubjects['regularSubjs'], $availableSubjects['alternativeSubjs']),
-                    '#attributes' => [
-                        'class' => ['flat-element',],
-                    ],
-                ];
-
-                $addingType = [
-                    '1' => 'Requested Subject',
-                    '2' => 'Offered Subject' 
-                ];
-                $form['form-container']
-                ['subject-table-container']['subjectsAvailable']['addingType'] = [
-                    '#type' => 'select',
-                    '#title' => 'Select Subject',
-                    '#options' => $addingType,
-                    '#attributes' => [
-                        'class' => ['flat-element',],
-                    ],
-                ];
-
-                $form['form-container']
-                ['subject-table-container']['subjectsAvailable']['add_subject'] = [
-                    '#type' => 'submit',
-                    '#name' => 'addSubject',
-                    '#value' => 'Add Subject',
-                    '#attributes' => [
-                        'class' => ['flat-btn',],
-                    ],
-                    '#ajax' => [
-                        'callback' => '::verifyAddingSubject',
-                        'wrapper' => 'enrollment-eval-form-container-wrapper', 
-                        'event' => 'click',
-                    ]
-                ];
 
                 $form['form-container']
                 ['subject-table-container']['subjectsNonAvailable'] = [
                     '#type' => 'details',
                     '#title' => $this->t('Regular Subjects (With Issues)'),
                     '#open' => TRUE,
+                    '#weight' => 6
                 ];
     
                 $form['form-container']
@@ -380,6 +452,7 @@ class EnrollmentEvaluation extends FormBase {
                     '#type' => 'details',
                     '#title' => $this->t('Alternative Subjects (No Issues)'),
                     '#open' => TRUE,
+                    '#weight' => 7
                 ];
     
                 $form['form-container']
@@ -524,9 +597,11 @@ class EnrollmentEvaluation extends FormBase {
             </tr>';
         }
         else {
-                foreach($subjects as $subject => $key){
+            $i = 0;
+            foreach($subjects as $subject => $key){
                 // var_dump($key);
-                
+
+                $i += 1;
                 if($key['reason'] == "OK" || $key['reason'] == "INCOMPLETE" || 
                     $key['reason'] == "FAILED" ) {
                     $alternatives .= '<tr>
@@ -548,52 +623,89 @@ class EnrollmentEvaluation extends FormBase {
         return $alternatives;
     }
 
-    protected function getAdditionalSubject($withIssues, $alternatives){
+    protected function getAdditionalSubject($subjects){
 
-        $additionalSubjects = [];
-        foreach($alternatives as $alternative => $key){
-            // var_dump($key);
-            
-            if($key['reason'] == "OK" || $key['reason'] == "INCOMPLETE" || 
-                $key['reason'] == "FAILED" ) {
-                $additionalSubjects[] = [
-                    $key['subj_uid'] => $key['subj_code'].' - '.$key['subj_description']
-                ];
+        $result = array();
+        $additional = "";
+        
+        if(!empty($subjects)){
+            $addedUnits = 0;
+    
+            foreach($subjects as $subject){
+                // var_dump($subject);
+
+                $addedUnits += $subject['subj_units'];
+                
+                $additional .= '<tr>
+                    <td>'.$subject['subj_code'].'</td>
+                    <td>'.$subject['subj_description'].'</td>
+                    <td>'.$subject['subj_units'].'</td>
+                    <td>'.$subject['subj_grade'].'</td>
+                    <td>'.$subject['prerequi1'].'</td> 
+                    <td>'.$subject['prerequi1remarks'].'</td>
+                    <td>'.$subject['prerequi2'].'</td>
+                    <td>'.$subject['prerequi2remarks'].'</td>
+                    <td>Requisites Complied</td>
+                </tr>';
+                
+
             }
-
         }
 
-        foreach($withIssues as $withIssue => $key){
-            // var_dump($key);
-            
-            if($key['reason'] == "ISSUES") {
-                $additionalSubjects[] = [
-                    $key['subj_uid'] => $key['subj_code'].' - '.$key['subj_description']
-                ];
-            }
+        $result['additionalSubj'] = $additional;
+        $result['additionalSubjUnits'] = $addedUnits;
 
-        }
+        return $result;
 
-        return $additionalSubjects;
     }
+
 
     public function verifyAddingSubject(array &$form, FormStateInterface $form_state){
         
-        $response = new AjaxResponse();
-        $selectedSubj = $form_state->getValue(['form-container','subject-table-container','subjectsAvailable','selectSubject']);
-        // var_dump($selectedSubj);
-        $modal_form = \Drupal::formBuilder()->getForm('Drupal\sedm\Form\Modals\VerifyCurriculumToSaveModalForm');
-        $command = new OpenDialogCommand($this->t('Add subject'), $modal_form, ['width' => '50%']);
-
-        $response->addCommand($command);
-
-        return $response;
+       
+        $selectedSubj = $form_state->getValue(['form-container','subject-table-container','action-container','selectedSubject']);
+        var_dump($selectedSubj);
+        
     }
 
     /**
      * {@inheritdoc}
      */
     public function validateForm(array &$form, FormStateInterface $form_state) {
+
+        $triggeredButton = $form_state->getTriggeringElement()['#buttonName'];
+
+        switch($triggeredButton){
+            case 'evaluate':{
+                $idNumber = $form_state->getValue(['form-container','student','details-container','idNumber']);
+
+                if(empty($idNumber)){
+                    $form_state->setError($form, $this->t('ID number is empty!'));
+                }
+                break;
+            } 
+            case 'addSubject':{
+                $info['id_number'] = $form_state->getValue(['form-container','student',
+                'details-container','idNumber']);
+
+                $info['selectedSubj'] = $form_state->getValue(['form-container','subject-table-container','subjectsAvailable',
+                'subject-request-container','subject_selection']);
+
+                $infoHasEmptyData = $this->checkEmptyData($info);
+                if(empty($info['id_number'])){
+                    $form_state->setError($form, $this->t('ID number is empty!'));
+                }
+
+                if(empty($info['selectedSubj'])) {
+                    $form_state->setError($form, $this->t('No selected subject!'));
+                }
+
+                break;
+            }
+            default:{
+                break;
+            }
+        }
 
         $idNumber = $form_state->getValue(['form-container','student','details-container','idNumber']);
 

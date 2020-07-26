@@ -15,6 +15,18 @@
     width: 100%;
 }
 
+.hide {
+    display: none;
+}
+
+.unhide {
+    display: block;
+}
+
+input.hidden {
+    display: none;
+}
+
 input.flat-btn {
     display:inline-block;
     padding:0.7em 1.7em;

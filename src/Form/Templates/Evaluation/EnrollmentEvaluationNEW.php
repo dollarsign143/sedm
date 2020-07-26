@@ -106,51 +106,47 @@ class EnrollmentEvaluation extends FormBase {
 
         $form['form-container']['student']['details-container']['evaluate'] = [
             '#type' => 'submit',
-            '#name' => 'evaluate',
             '#value' => 'Evaluate',
-            '#submit' => ['::searchAvailableSubjects'],
             '#attributes' => [
                 'class' => ['flat-btn',],
             ],
             '#ajax' => [
-                'callback' => '::updateTableCallback',
+                'callback' => '::searchAvailableSubjects',
                 'wrapper' => 'enrollment-eval-form-container-wrapper', 
                 'event' => 'click',
             ]
         ];
 
-        $containerType = $form_state->get('tableContainerType');
-        $tableContainerType = "";
-        if(empty($containerType)){
-            $tableContainerType = 'hidden';
-        }
-        else {
-            $tableContainerType = 'container';
-        }
+        $form['form-container']['student-info-fieldset'] = [
+            '#type' => 'fieldset',
+            '#title' => 'Student Info.',
+            '#weight' => 2
+        ];
+
+        $form['form-container']['student-info-fieldset']['stud-info-container'] = [
+            '#type' => 'container',
+            '#attributes' => [
+                'class' => ['inline-container-col3',],
+            ],
+        ];
+
+        $form['form-container']['student-info-fieldset']['stud-info-container']['last-name'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Last Name'),
+            '#value' => 'Last Name',
+            '#attributes' => [
+                'class' => ['flat-input',],
+                'disabled' => TRUE,
+            ],
+        ];
 
         $form['form-container']['subject-table-container'] = [
-            '#type' => $tableContainerType,
+            '#type' => 'container',
             '#prefix' => '<div id="subj-table-container-wrapper">',
             '#suffix' => '</div>',
             '#weight' => 3,
         ];
 
-
-        // $availableSubjects = $form_state->get('available_subjects');
-        // $availableSubjectsTotalMaxUnits = $form_state->get('available_subjects_total_max_units');
-        // $availableSubjectsAcquiredUnits = $form_state->get('available_subjects_acquired_units');
-
-        // $nonAvailableSubjects = $form_state->get('nonAvailable_subjects');
-        // $alternativeSubjects = $form_state->get('alternative_subjects');
-
-        $availableSubjects = 'Test';
-        $availableSubjectsTotalMaxUnits = 'Test';
-        $availableSubjectsAcquiredUnits = 'Test';
-
-        $nonAvailableSubjects = 'Test';
-        $alternativeSubjects = 'Test';
-
-        // Available Subjects
         $form['form-container']
         ['subject-table-container']['subjectsAvailable'] = [
             '#type' => 'details',
@@ -184,100 +180,22 @@ class EnrollmentEvaluation extends FormBase {
                     </tr>
                 </thead>
                 <tbody class="subjectsNoIssuesBody">
-                '.$availableSubjects.'
+                '.$available['available'].'
                 <tr>
                     <td colspan="7"></td>
                     <td>Max Load Units</td>
-                    <td>'.$availableSubjectsTotalMaxUnits.'</td>
+                    <td>'.$availableSubjects['regularSubjs']['totalMaxUnits'].'</td>
                 </tr>
                 <tr>
                     <td colspan="7"></td>
                     <td>Total Aquired Units</td>
-                    <td>'.$availableSubjectsAcquiredUnits.'</td>
+                    <td>'.$available['totalUnits'].'</td>
                 </tr>
                 </tbody>
                 </table>
             </div>'),
         ];
 
-        // Non Available Subjects
-        $form['form-container']
-        ['subject-table-container']['subjectsNonAvailable'] = [
-            '#type' => 'details',
-            '#title' => $this->t('Regular Subjects (With Issues)'),
-            '#open' => TRUE,
-        ];
-
-        $form['form-container']
-        ['subject-table-container']['subjectsNonAvailable']['description'] = [
-            '#type' => 'item',
-            '#markup' => $this->t('The subjects listed below have issues and not advisable to enroll.'),
-        ];
-
-        $form['form-container']
-        ['subject-table-container']['subjectsNonAvailable']['table'] = [
-            '#type' => 'markup',
-            '#markup' => $this->t('
-            <div>
-                <table>
-                <thead>
-                    <tr>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Units</th>
-                    <th>Pre-Requisite</th>
-                    <th>Grade</th>
-                    <th>Co-Requisite</th>
-                    <th>Grade</th>
-                    <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody class="subjectsWithIssuesBody">
-                '.$nonAvailableSubjects.'
-                </tbody>
-                </table>
-            </div>'),
-        ];
-
-        // Alternative Subjects
-        $form['form-container']
-        ['subject-table-container']['subjectsAlternative'] = [
-            '#type' => 'details',
-            '#title' => $this->t('Alternative Subjects (No Issues)'),
-            '#open' => TRUE,
-        ];
-
-        $form['form-container']
-        ['subject-table-container']['subjectsAlternative']['description'] = [
-            '#type' => 'item',
-            '#markup' => $this->t('The subjects listed below can be enrolled as alternative if the student choose to.'),
-        ];
-
-        $form['form-container']
-        ['subject-table-container']['subjectsAlternative']['table'] = [
-            '#type' => 'markup',
-            '#markup' => $this->t('
-            <div>
-                <table>
-                <thead>
-                    <tr>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Units</th>
-                    <th>Grade</th>
-                    <th>Pre-Requisite</th>
-                    <th>Grade</th>
-                    <th>Co-Requisite</th>
-                    <th>Grade</th>
-                    <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody class="subjectsAlternativeBody">
-                '.$alternativeSubjects.'
-                </tbody>
-                </table>
-            </div>'),
-        ];
 
         return $form;
     }
@@ -289,124 +207,17 @@ class EnrollmentEvaluation extends FormBase {
     public function searchAvailableSubjects(array &$form, FormStateInterface $form_state){
 
         $logger = $this->getLogger('sedm');
-
-        $form_state->set('tableContainerType', 'container');
+        $form['form-container']['student-info-fieldset']['stud-info-container']['last-name']['#value'] = 'Caton';
             
-        $form_state->setRebuild();
-        
-        // if($form_state->getErrors()){
-
-        //     $form['form-container']['student']
-        //     ['notice-container']['status_messages'] = [
-        //         '#type' => 'status_messages',
-        //     ];
-
-        //     return $form['form-container'];
-        // }
-        //     // this condition will append the subjects table
-        // else{
-
-        //     $info['id_number'] = $form_state->getValue(['form-container','student','details-container','idNumber']);
-        //     $info['year_level'] = $form_state->getValue(['form-container','student','details-container','select_container','yearLevel']);
-        //     $info['semester'] = $form_state->getValue(['form-container','student','details-container','select_container','semester']);
-            
-        //     $EDO = new EvaluationDatabaseOperations();
-        //     $stud_info = $EDO->getStudentInfo($info['id_number']);
-            
-        //     if(empty($stud_info)){
-        //         $response = new AjaxResponse();
-        //         $content['form-container']['notice-container']['message'] = [
-        //             '#type' => 'item',
-        //             '#markup' => $this->t('Can\'t find the ID number!'),
-        //         ];
-        //         $command = new OpenModalDialogCommand($this->t('Error!'), $content, ['width' => '50%',]);
-
-        //         $response->addCommand($command);
-            
-        //         return $response;
-
-        //     }
-        //     else {
-        //         $curri_uid = $stud_info[0]->curriculum_uid;
-        //         $availableSubjects = $EDO->getAvailableSubjects($info, $curri_uid);
-        //         // var_dump($availableSubjects['alternativeSubjs']);
-    
-        //         $available = $this->getNoIssueAvailableSubjects($availableSubjects['regularSubjs']);
-        //         $nonAvailable = $this->getWithIssueAvailableSubjects($availableSubjects['regularSubjs']);
-        //         $alternatives = $this->getAlternativeSubjects($availableSubjects['alternativeSubjs']);
-        //         $unitsAcquired = 0;
-
-        //         $form['form-container']['student-info-fieldset'] = [
-        //             '#type' => 'fieldset',
-        //             '#title' => 'Student Info.',
-        //             '#weight' => 2
-        //         ];
-    
-        //         $form['form-container']['student-info-fieldset']['stud-info-container'] = [
-        //             '#type' => 'container',
-        //             '#attributes' => [
-        //                 'class' => ['inline-container-col3',],
-        //             ],
-        //         ];
-    
-        //         $form['form-container']['student-info-fieldset']['stud-info-container']['last-name'] = [
-        //             '#type' => 'textfield',
-        //             '#title' => $this->t('Last Name'),
-        //             '#value' => ucwords($stud_info[0]->studProf_lname),
-        //             '#attributes' => [
-        //                 'class' => ['flat-input',],
-        //                 'disabled' => TRUE,
-        //             ],
-        //         ];
-    
-        //         $form['form-container']['student-info-fieldset']['stud-info-container']['first-name'] = [
-        //             '#type' => 'textfield',
-        //             '#title' => $this->t('First Name'),
-        //             '#value' => ucwords($stud_info[0]->studProf_fname),
-        //             '#attributes' => [
-        //                 'class' => ['flat-input',],
-        //                 'disabled' => TRUE,
-        //             ],
-        //         ];
-    
-        //         $form['form-container']['student-info-fieldset']['stud-info-container']['middle-name'] = [
-        //             '#type' => 'textfield',
-        //             '#title' => $this->t('Middle Name'),
-        //             '#value' => ucwords($stud_info[0]->studProf_mname),
-        //             '#attributes' => [
-        //                 'class' => ['flat-input',],
-        //                 'disabled' => TRUE,
-        //             ],
-        //         ];
-    
-        //         $form['form-container']['student-info-fieldset']['stud-info-container']['college'] = [
-        //             '#type' => 'textfield',
-        //             '#title' => $this->t('College'),
-        //             '#value' => ucwords($stud_info[0]->college_abbrev),
-        //             '#attributes' => [
-        //                 'class' => ['flat-input',],
-        //                 'disabled' => TRUE,
-        //             ],
-        //         ];
-    
-        //         $form['form-container']['student-info-fieldset']['stud-info-container']['program'] = [
-        //             '#type' => 'textfield',
-        //             '#title' => $this->t('Program'),
-        //             '#value' => ucwords($stud_info[0]->program_abbrev),
-        //             '#attributes' => [
-        //                 'class' => ['flat-input',],
-        //                 'disabled' => TRUE,
-        //             ],
-        //         ];
-
-
-        //     }
-        // }
-
+        return $form['form-container'];
     }
+
     public function updateTableCallback(array &$form, FormStateInterface $form_state){
         return $form['form-container'];
     }
+
+
+
 
     protected function getNoIssueAvailableSubjects($subjects){
         // var_dump($subjects);

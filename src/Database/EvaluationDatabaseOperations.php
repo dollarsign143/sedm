@@ -134,6 +134,36 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
 
     }
 
+    public function insertStudentRequest($info){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $logger = $this->getLogger('sedm');
+
+        try {
+
+            preg_match('/(?P<digit>\d+)/', $info['selectedSubj'], $subject_uid);
+            $result = $connection->insert('requested_subjects')
+            ->fields([
+                'reqSubj_requestType' => $info['requestType'],
+                'reqSubj_year' => $info['year_level'],
+                'reqSubj_sem' => $info['semester'],
+                'reqSubj_subjectUID' => $subject_uid[0],
+                'reqSubj_studentIdNum' => $info['id_number']
+            ])
+            ->execute();
+    
+            return true;
+
+        } catch (Exception $e) {
+            $logger->error($e->getMessage());
+            return false;
+        }
+
+    }
+
     /**
      * @param $data : includes $data['id_number'], $data['year_level'], $data['semester']
      * @param $curri_uid : curriculum unique id
@@ -144,8 +174,8 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         // get the active connection and put into an object
         $connection = Database::getConnection();
 
-        $logger = $this->getLogger('sedm');
-        $logger->info('getAvailableSubjects');
+        // $logger = $this->getLogger('sedm');
+        // $logger->info('getAvailableSubjects');
 
         $availableSubjs = array();
 
@@ -154,7 +184,8 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         $curri_subjs = $this->getCurriculumSubjects($curri_uid, $data['year_level'], $data['semester']);
         // $curri_subjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
         $regularSubjs = $this->filterSubjects($data, $curri_subjs);
-
+        $requested_subjs = $this->getStudRequestedSubjs($curri_uid, $data);
+        $additionalSubjs = $this->filterSubjects($data, $requested_subjs);
         $allSubjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
         $alternativeSubjs = array_diff(array_map('json_encode', $allSubjs), array_map('json_encode', $curri_subjs));
 
@@ -166,8 +197,68 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
         $availableSubjs['regularSubjs'] = $regularSubjs;
         $availableSubjs['regularSubjs']['totalMaxUnits'] = $this->sumUnits($curri_subjs);
         $availableSubjs['alternativeSubjs'] = $filteredAlternativeSubjs;
+        $availableSubjs['additionalSubjs'] = $additionalSubjs;
 
         return $availableSubjs;
+    }
+
+    public function getAvailableSubjectsByKeyword($data, $curri_uid, $keyword){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        // $logger = $this->getLogger('sedm');
+        // $logger->info('getAvailableSubjects');
+
+        $availableSubjs = array();
+
+        // Algorithm:
+        // #1: get the curriculum subjects of a certain year level and semester
+        $curri_subjs = $this->getCurriculumSubjectsByKeyword($curri_uid, $data['year_level'], $data['semester'], $keyword);
+        // $curri_subjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
+        $regularSubjs = $this->filterSubjects($data, $curri_subjs);
+        $allSubjs = $this->getCurriculumSubjectsByCurriUID($curri_uid);
+        $alternativeSubjs = array_diff(array_map('json_encode', $allSubjs), array_map('json_encode', $curri_subjs));
+
+        // Json decode the result
+        $alternativeSubjs = array_map('json_decode', $alternativeSubjs);
+        $filteredAlternativeSubjs = $this->filterSubjects($data, $alternativeSubjs);
+        // var_dump($filteredAlternativeSubjs);
+
+        $availableSubjs['regularSubjs'] = $regularSubjs;
+        $availableSubjs['alternativeSubjs'] = $filteredAlternativeSubjs;
+
+        return $availableSubjs;
+    }
+
+    protected function getStudRequestedSubjs($curri_uid, $data){
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query('SELECT DISTINCT * 
+        FROM requested_subjects,curriculum_subjects,subjects
+        WHERE requested_subjects.reqSubj_subjectUID = curriculum_subjects.subject_uid
+        AND requested_subjects.reqSubj_subjectUID = subjects.subject_uid
+        AND curriculum_subjects.curriculum_uid = :curri_uid
+        AND requested_subjects.reqSubj_year = :yearLevel
+        AND requested_subjects.reqSubj_sem = :sem
+        AND requested_subjects.reqSubj_studentIdNum = :idNumber',
+        [
+            ':curri_uid' => $curri_uid,
+            ':yearLevel' => $data['year_level'],
+            ':sem' => $data['semester'],
+            ':idNumber' => $data['id_number']
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+
     }
 
     protected function filterSubjects($data, $curri_subjs){
@@ -304,6 +395,45 @@ class EvaluationDatabaseOperations extends DatabaseOperations {
             ':curr_uid' => $curr_uid,
             ':year_level' => $year_level,
             ':semester' => $sem
+        ]);
+
+        $result = $query->fetchAll();
+
+        Database::closeConnection();
+
+        return $result;
+
+    }
+
+    public function getCurriculumSubjectsByKeyword($curr_uid, $year_level, $sem, $keyword){
+
+        //setting up test_drupal_data database into active connection
+        Database::setActiveConnection('test_drupal_data');
+        // get the active connection and put into an object
+        $connection = Database::getConnection();
+
+        $query = $connection->query('SELECT * 
+        FROM curriculum_subjects,subjects
+        WHERE 
+        subjects.subject_uid = curriculum_subjects.subject_uid
+        AND subjects.subject_isActive = :isActive
+        AND curriculum_subjects.curriculum_uid = :curr_uid
+        AND curriculum_subjects.curricSubj_year = :year_level
+        AND curriculum_subjects.curricSubj_sem = :semester
+        AND subjects.subject_desc LIKE :keyword
+        OR
+        subjects.subject_uid = curriculum_subjects.subject_uid
+        AND subjects.subject_isActive = :isActive
+        AND curriculum_subjects.curriculum_uid = :curr_uid
+        AND curriculum_subjects.curricSubj_year = :year_level
+        AND curriculum_subjects.curricSubj_sem = :semester
+        AND subjects.subject_code LIKE :keyword',
+        [
+            ':isActive' => 'active',
+            ':curr_uid' => $curr_uid,
+            ':year_level' => $year_level,
+            ':semester' => $sem,
+            ':keyword' => '%'.$keyword.'%'
         ]);
 
         $result = $query->fetchAll();
